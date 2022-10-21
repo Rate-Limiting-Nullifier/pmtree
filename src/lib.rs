@@ -17,9 +17,3 @@ pub struct Error(String);
 /// Custom `Result` type/alias; used for interaction
 /// with Database
 pub type Result<T> = std::result::Result<T, Error>;
-
-/// Type that denotes default database for pmtree
-pub type DefaultDatabase = VecDB;
-
-/// Type that denotes default hash-function for pmtree
-pub type DefaultHasher = Poseidon;
