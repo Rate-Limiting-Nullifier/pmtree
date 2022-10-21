@@ -9,7 +9,6 @@
 ## How to use
 ```toml
 [dependencies]
-# add here
 pmtree = { git = "https://github.com/Rate-Limiting-Nullifier/pmtree" }
 ```
 
