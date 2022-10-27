@@ -1,6 +1,5 @@
 use crate::*;
 
-#[derive(Default)]
 pub struct MerkleTree<D, H>
 where
     D: Database,
