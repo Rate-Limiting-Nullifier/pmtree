@@ -22,3 +22,8 @@ cargo build --release
 ```bash
 cargo test --release
 ```
+
+## Docs
+```bash
+cargo docs --open
+```
