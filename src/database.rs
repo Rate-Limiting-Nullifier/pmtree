@@ -2,8 +2,14 @@ use crate::*;
 
 /// Trait that must be implemented for a Database
 pub trait Database {
+    /// Creates new instance of db
     fn new(dbpath: &str) -> Self;
-    fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>>;
-    fn put(&mut self, key: &[u8], value: &[u8]) -> Result<()>;
-    fn delete(&mut self, key: &[u8]) -> Result<()>;
+    /// Loades existing db (existence check required)
+    fn load(dbpath: &str) -> Self;
+    /// Returns value from db by the key
+    fn get(&self, key: DBKey) -> Result<Option<Value>>;
+    /// Puts the value to the db by the key
+    fn put(&mut self, key: DBKey, value: Value) -> Result<()>;
+    /// Deletes the key from db
+    fn delete(&mut self, key: DBKey) -> Result<()>;
 }

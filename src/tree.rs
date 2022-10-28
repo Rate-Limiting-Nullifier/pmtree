@@ -1,5 +1,6 @@
 use crate::*;
 
+/// Merkle Tree implementation
 pub struct MerkleTree<D, H>
 where
     D: Database,
@@ -11,39 +12,19 @@ where
     next_index: usize,
 }
 
-pub(crate) struct Key(usize, usize);
-
-impl From<Key> for Vec<u8> {
-    fn from(key: Key) -> Vec<u8> {
-        todo!()
-    }
-}
-
 impl<D, H> MerkleTree<D, H>
 where
     D: Database,
     H: Hasher,
 {
-    /// Creates new `MerkleTree`
+    /// Creates new `MerkleTree` and store it to the specified path/db
     pub fn new(depth: usize, dbpath: &str) -> Result<Self> {
-        // TODO: Use open instead of new, and check if the database is exists
-        let mut db: D = Database::new(dbpath);
+        todo!()
+    }
 
-        db.put(&Vec::<u8>::from(Key(depth, 0)), &H::default_leaf().into())?;
-        for i in (0..depth).rev() {
-            let prev = db.get(&Vec::<u8>::from(Key(i + 1, 0)))?.unwrap();
-            db.put(
-                &Vec::<u8>::from(Key(i, 0)),
-                &H::hash(&[prev.clone().into(), prev.into()]).into(),
-            )?;
-        }
-
-        Ok(Self {
-            db,
-            h: Hasher::new(),
-            depth,
-            next_index: 0,
-        })
+    /// Loads existing Merkle Tree from the specified path/db
+    pub fn load(dbpath: &str) -> Result<Self> {
+        todo!()
     }
 
     /// Inserts a leaf to the next available index
@@ -51,7 +32,7 @@ where
         todo!()
     }
 
-    /// Recalculates `Merkle Tree` from the specified key
+    // Recalculates `Merkle Tree` from the specified key
     fn recalculate_from(&mut self, key: usize) {
         todo!()
     }
