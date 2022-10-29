@@ -7,8 +7,10 @@ pub trait Hasher {
 
     /// Creates new hash-function instance
     fn new() -> Self;
+
     /// Outputs the default leaf (Fr::default())
     fn default_leaf() -> Self::Fr;
+
     /// Calculates hash-function
     fn hash(input: &[Self::Fr]) -> Self::Fr;
 }
