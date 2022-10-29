@@ -85,16 +85,32 @@ where
 
     /// Inserts a leaf to the next available index
     pub fn insert(&mut self, leaf: H::Fr) -> Result<()> {
+        // TODO: Return error
+        assert!(self.next_index < 1 << self.depth, "Merkle Tree is full");
+
+        self.set(self.next_index, leaf)?;
+        self.next_index += 1;
+
+        Ok(())
+    }
+
+    /// Deletes a leaf at the `key` by setting it to its default value
+    pub fn delete(&mut self, key: usize) -> Result<()> {
+        // TODO: Return error
+        assert!(key < self.next_index, "Already default");
+
+        self.set(key, H::default_leaf())?;
+
+        Ok(())
+    }
+
+    /// Sets a leaf at the specified tree index
+    fn set(&mut self, key: usize, leaf: H::Fr) -> Result<()> {
         todo!()
     }
 
     // Recalculates `Merkle Tree` from the specified key
-    fn recalculate_from(&mut self, key: usize) {
-        todo!()
-    }
-
-    /// Deletes a  leaf at the `key` by setting it to its default value
-    pub fn delete(&mut self, key: usize) -> Result<()> {
+    fn recalculate_from(&mut self, key: usize) -> Result<()> {
         todo!()
     }
 
