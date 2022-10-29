@@ -1,10 +1,10 @@
 use crate::*;
 
 // db[DEPTH_KEY] = depth
-const DEPTH_KEY: DBKey = [0; 8];
+const DEPTH_KEY: DBKey = (usize::MAX - 1).to_be_bytes();
 
 // db[NEXT_INDEX_KEY] = next_index;
-const NEXT_INDEX_KEY: DBKey = [1; 8];
+const NEXT_INDEX_KEY: DBKey = usize::MAX.to_be_bytes();
 
 // Denotes keys (depth, index) in Merkle Tree. Can be converted to DBKey
 struct Key(usize, usize);
@@ -85,16 +85,26 @@ where
 
     /// Inserts a leaf to the next available index
     pub fn insert(&mut self, leaf: H::Fr) {
+        // Check if the Merkle Tree is not full
         assert!(self.next_index < 1 << self.depth, "Merkle Tree is full!");
 
+        // Update the tree
         self.set(self.next_index, leaf);
+
+        // Update next_index in memory
         self.next_index += 1;
+
+        // Update next_index in db
+        let next_index_val = self.next_index.to_be_bytes().to_vec();
+        self.db.put(NEXT_INDEX_KEY, next_index_val);
     }
 
     /// Deletes a leaf at the `key` by setting it to its default value
     pub fn delete(&mut self, key: usize) {
+        // Check if the key exists
         assert!(key < self.next_index, "The key doesn't exist!");
 
+        // Update the tree
         self.set(key, H::default_leaf());
     }
 

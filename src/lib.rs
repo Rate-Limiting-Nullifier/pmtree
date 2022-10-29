@@ -2,8 +2,8 @@
 //! Persistent Merkle Tree in Rust
 //!
 //! ## How it stored
-//! { [0, 0, ..., 0] : depth }
-//! { [0, 0, ..., 1] : next_index}
+//! { (usize::MAX - 1) : depth }
+//! { (usize::MAX)     : next_index}
 //! { Position (tuple, converted to DBKey) : Value}
 
 pub mod database;
