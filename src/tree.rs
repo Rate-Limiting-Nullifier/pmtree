@@ -110,7 +110,7 @@ where
 
     /// Returns the root of the tree
     pub fn root(&self) -> H::Fr {
-        todo!()
+        self.db.get(Key(0, 0).into()).unwrap().into()
     }
 
     /// Returns the total number of leaves set
