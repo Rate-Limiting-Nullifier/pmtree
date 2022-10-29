@@ -51,7 +51,7 @@ where
         db.put(Key(depth, 0).into(), prev.into())?;
         for i in (0..depth).rev() {
             prev = H::hash(&[prev, prev]);
-            db.put(Key(i + 1, 0).into(), prev.into())?;
+            db.put(Key(i, 0).into(), prev.into())?;
         }
 
         Ok(Self {
