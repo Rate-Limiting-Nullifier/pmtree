@@ -64,7 +64,23 @@ where
 
     /// Loads existing Merkle Tree from the specified path/db
     pub fn load(dbpath: &str) -> Result<Self> {
-        todo!()
+        // Load existing db instance
+        let db = D::load(dbpath);
+
+        // Load depth & next_index values from db
+        // TODO: proper handling instead of unwrap
+        let depth = db.get(DEPTH_KEY)?.unwrap().try_into().unwrap();
+        let depth = usize::from_be_bytes(depth);
+
+        let next_index = db.get(NEXT_INDEX_KEY)?.unwrap().try_into().unwrap();
+        let next_index = usize::from_be_bytes(next_index);
+
+        Ok(Self {
+            db,
+            h: H::new(),
+            depth,
+            next_index,
+        })
     }
 
     /// Inserts a leaf to the next available index
