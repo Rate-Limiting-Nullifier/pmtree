@@ -1,4 +1,5 @@
 use crate::*;
+use std::marker::PhantomData;
 
 // db[DEPTH_KEY] = depth
 const DEPTH_KEY: DBKey = (usize::MAX - 1).to_be_bytes();
@@ -22,7 +23,7 @@ where
     H: Hasher,
 {
     db: D,
-    h: H,
+    h: PhantomData<H>,
     depth: usize,
     next_index: usize,
 }
@@ -56,7 +57,7 @@ where
 
         Self {
             db,
-            h: H::new(),
+            h: PhantomData,
             depth,
             next_index,
         }
@@ -77,7 +78,7 @@ where
 
         Self {
             db,
-            h: H::new(),
+            h: PhantomData,
             depth,
             next_index,
         }
