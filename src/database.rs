@@ -9,11 +9,11 @@ pub trait Database {
     fn load(dbpath: &str) -> Self;
 
     /// Returns value from db by the key
-    fn get(&self, key: DBKey) -> Result<Option<Value>>;
+    fn get(&self, key: DBKey) -> Option<Value>;
 
     /// Puts the value to the db by the key
-    fn put(&mut self, key: DBKey, value: Value) -> Result<()>;
+    fn put(&mut self, key: DBKey, value: Value);
 
     /// Deletes the key from db
-    fn delete(&mut self, key: DBKey) -> Result<()>;
+    fn delete(&mut self, key: DBKey);
 }
