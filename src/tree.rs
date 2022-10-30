@@ -8,6 +8,7 @@ const DEPTH_KEY: DBKey = (usize::MAX - 1).to_be_bytes();
 const NEXT_INDEX_KEY: DBKey = usize::MAX.to_be_bytes();
 
 // Denotes keys (depth, index) in Merkle Tree. Can be converted to DBKey
+#[derive(Clone, Copy)]
 struct Key(usize, usize);
 impl From<Key> for DBKey {
     fn from(key: Key) -> DBKey {
@@ -26,6 +27,7 @@ where
     h: PhantomData<H>,
     depth: usize,
     next_index: usize,
+    cache: Vec<H::Fr>,
 }
 
 impl<D, H> MerkleTree<D, H>
@@ -47,12 +49,15 @@ where
         let next_index_val = next_index.to_be_bytes().to_vec();
         db.put(NEXT_INDEX_KEY, next_index_val);
 
+        // Cache nodes
+        let mut cache = Vec::with_capacity(depth + 1);
+
         // Initialize one branch of the `Merkle Tree` from bottom to top
-        let mut prev = H::default_leaf();
-        db.put(Key(depth, 0).into(), prev.into());
+        cache[depth] = H::default_leaf();
+        db.put(Key(depth, 0).into(), cache[depth].into());
         for i in (0..depth).rev() {
-            prev = H::hash(&[prev, prev]);
-            db.put(Key(i, 0).into(), prev.into());
+            cache[i] = H::hash(&[cache[i + 1], cache[i + 1]]);
+            db.put(Key(i, 0).into(), cache[i].into());
         }
 
         Self {
@@ -60,6 +65,7 @@ where
             h: PhantomData,
             depth,
             next_index,
+            cache,
         }
     }
 
@@ -69,18 +75,25 @@ where
         let db = D::load(dbpath);
 
         // Load depth & next_index values from db
-        // TODO: proper handling instead of unwrap
         let depth = db.get(DEPTH_KEY).unwrap().try_into().unwrap();
         let depth = usize::from_be_bytes(depth);
 
         let next_index = db.get(NEXT_INDEX_KEY).unwrap().try_into().unwrap();
         let next_index = usize::from_be_bytes(next_index);
 
+        // Load cache vec
+        let mut cache = Vec::with_capacity(depth + 1);
+        cache[depth] = H::default_leaf();
+        for i in (0..depth).rev() {
+            cache[i] = H::hash(&[cache[i + 1], cache[i + 1]]);
+        }
+
         Self {
             db,
             h: PhantomData,
             depth,
             next_index,
+            cache,
         }
     }
 
@@ -111,12 +124,38 @@ where
 
     /// Sets a leaf at the specified tree index
     fn set(&mut self, key: usize, leaf: H::Fr) {
-        todo!()
+        self.db.put(Key(self.depth, key).into(), leaf.into());
+        self.recalculate_from(key);
     }
 
     // Recalculates `Merkle Tree` from the specified key
     fn recalculate_from(&mut self, key: usize) {
-        todo!()
+        let mut depth = self.depth;
+        let mut i = key;
+
+        while depth != 0 {
+            let value = self.hash_couple(depth, key);
+            i >>= 1;
+            depth -= 1;
+            self.db.put(Key(depth, i).into(), value.into());
+        }
+    }
+
+    // Hashes the right couple for the key
+    fn hash_couple(&mut self, depth: usize, key: usize) -> H::Fr {
+        let b = key & !1;
+        H::hash(&[
+            self.get_elem(Key(depth, b)),
+            self.get_elem(Key(depth, b + 1)),
+        ])
+    }
+
+    // Returns elem by the key
+    fn get_elem(&self, key: Key) -> H::Fr {
+        self.db
+            .get(key.into())
+            .unwrap_or_else(|| self.cache[key.0].into())
+            .into()
     }
 
     /// Returns the root of the tree

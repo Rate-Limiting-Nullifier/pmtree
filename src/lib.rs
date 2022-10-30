@@ -4,7 +4,7 @@
 //! ## How it stored
 //! { (usize::MAX - 1) : depth }
 //! { (usize::MAX)     : next_index}
-//! { Position (tuple, converted to DBKey) : Value}
+//! { Position (tuple - (depth, index), converted to DBKey) : Value}
 
 pub mod database;
 pub mod hasher;
