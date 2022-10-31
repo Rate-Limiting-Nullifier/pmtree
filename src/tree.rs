@@ -11,7 +11,7 @@ const NEXT_INDEX_KEY: DBKey = usize::MAX.to_be_bytes();
 #[derive(Clone, Copy)]
 struct Key(usize, usize);
 impl From<Key> for DBKey {
-    fn from(key: Key) -> DBKey {
+    fn from(key: Key) -> Self {
         let cantor_pairing = (key.0 + key.1) * (key.0 + key.1 + 1) / 2 + key.1;
         cantor_pairing.to_be_bytes()
     }
@@ -122,7 +122,7 @@ where
         self.set(key, H::default_leaf());
     }
 
-    /// Sets a leaf at the specified tree index
+    // Sets a leaf at the specified tree index
     fn set(&mut self, key: usize, leaf: H::Fr) {
         self.db.put(Key(self.depth, key).into(), leaf.into());
         self.recalculate_from(key);
