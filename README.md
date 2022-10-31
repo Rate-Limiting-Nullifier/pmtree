@@ -8,7 +8,7 @@
 
 <h1 align="center">pmtree</h1>
 
-<h3 align="center">Persistent Merkle Tree (sparse & fixed-size) in Rust</h3>
+<h3 align="center">Persistent Merkle Tree (optimized & sparse & fixed-size) in Rust</h3>
 
 ## How to use
 ```toml
