@@ -50,7 +50,7 @@ where
         db.put(NEXT_INDEX_KEY, next_index_val);
 
         // Cache nodes
-        let mut cache = Vec::with_capacity(depth + 1);
+        let mut cache = vec![H::default_leaf(); depth + 1];
 
         // Initialize one branch of the `Merkle Tree` from bottom to top
         cache[depth] = H::default_leaf();
@@ -82,7 +82,7 @@ where
         let next_index = usize::from_be_bytes(next_index);
 
         // Load cache vec
-        let mut cache = Vec::with_capacity(depth + 1);
+        let mut cache = vec![H::default_leaf(); depth + 1];
         cache[depth] = H::default_leaf();
         for i in (0..depth).rev() {
             cache[i] = H::hash(&[cache[i + 1], cache[i + 1]]);

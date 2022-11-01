@@ -63,4 +63,10 @@ impl Hasher for MyKeccak {
 }
 
 #[test]
-fn insert_delete() {}
+fn insert_delete() {
+    let mt = MerkleTree::<MemoryDB, MyKeccak>::new(3, "abacaba");
+
+    assert_eq!(mt.capacity(), 8);
+    assert_eq!(mt.depth(), 3);
+    println!("{:?}", mt.root());
+}
