@@ -13,7 +13,4 @@ pub trait Database {
 
     /// Puts the value to the db by the key
     fn put(&mut self, key: DBKey, value: Value);
-
-    /// Deletes the key from db
-    fn delete(&mut self, key: DBKey);
 }

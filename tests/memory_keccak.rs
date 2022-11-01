@@ -25,10 +25,6 @@ impl Database for MemoryDB {
     fn put(&mut self, key: DBKey, value: Value) {
         self.0.insert(key, value);
     }
-
-    fn delete(&mut self, key: DBKey) {
-        self.0.remove(&key);
-    }
 }
 
 impl From<Vec<u8>> for MyFr {
