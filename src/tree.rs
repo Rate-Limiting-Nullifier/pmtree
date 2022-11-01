@@ -134,7 +134,7 @@ where
         let mut i = key;
 
         while depth != 0 {
-            let value = self.hash_couple(depth, key);
+            let value = self.hash_couple(depth, i);
             i >>= 1;
             depth -= 1;
             self.db.put(Key(depth, i).into(), value.into());
