@@ -142,7 +142,7 @@ where
     }
 
     // Hashes the right couple for the key
-    fn hash_couple(&mut self, depth: usize, key: usize) -> H::Fr {
+    fn hash_couple(&self, depth: usize, key: usize) -> H::Fr {
         let b = key & !1;
         H::hash(&[
             self.get_elem(Key(depth, b)),
