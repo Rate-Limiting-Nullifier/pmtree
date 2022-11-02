@@ -1,29 +1,41 @@
 use hex_literal::hex;
 use pmtree::*;
-use std::collections::HashMap;
+use std::fs;
 use tiny_keccak::{Hasher as _, Keccak};
 
-struct MemoryDB(HashMap<DBKey, Value>);
 struct MyKeccak(Keccak);
+struct MySled(sled::Db);
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 struct MyFr([u8; 32]);
 
-impl Database for MemoryDB {
-    fn new(_dbpath: &str) -> Self {
-        MemoryDB(HashMap::new())
+impl Database for MySled {
+    fn new(dbpath: &str) -> Self {
+        let db = sled::open(dbpath).unwrap();
+        assert!(!db.was_recovered(), "Database exists, try load()!");
+
+        MySled(db)
     }
 
-    fn load(_dbpath: &str) -> Self {
-        panic!("Cannot load in-memory db!")
+    fn load(dbpath: &str) -> Self {
+        let db = sled::open(dbpath).unwrap();
+        if !db.was_recovered() {
+            println!("Hello world");
+            fs::remove_dir_all(dbpath).expect("Error removing db");
+            panic!("Trying to load non-existing database!");
+        }
+
+        MySled(db)
     }
 
     fn get(&self, key: DBKey) -> Option<Value> {
-        self.0.get(&key).cloned()
+        self.0.get(key).unwrap().map(|val| val.to_vec())
     }
 
     fn put(&mut self, key: DBKey, value: Value) {
-        self.0.insert(key, value);
+        self.0.insert(key, value).unwrap();
+
+        self.0.flush().unwrap();
     }
 }
 
@@ -60,7 +72,7 @@ impl Hasher for MyKeccak {
 
 #[test]
 fn insert_delete() {
-    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, "abacaba");
+    let mut mt = MerkleTree::<MySled, MyKeccak>::new(2, "abacaba");
 
     assert_eq!(mt.capacity(), 4);
     assert_eq!(mt.depth(), 2);
@@ -94,4 +106,6 @@ fn insert_delete() {
     }
 
     assert_eq!(mt.root(), MyFr(default_tree_root));
+
+    fs::remove_dir_all("abacaba").expect("Error removing db");
 }
