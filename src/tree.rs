@@ -8,6 +8,7 @@ const DEPTH_KEY: DBKey = (usize::MAX - 1).to_be_bytes();
 const NEXT_INDEX_KEY: DBKey = usize::MAX.to_be_bytes();
 
 // Denotes keys (depth, index) in Merkle Tree. Can be converted to DBKey
+// TODO! Think about using hashing for that
 #[derive(Clone, Copy)]
 struct Key(usize, usize);
 impl From<Key> for DBKey {
@@ -141,7 +142,7 @@ where
         }
     }
 
-    // Hashes the right couple for the key
+    // Hashes the correct couple for the key
     fn hash_couple(&self, depth: usize, key: usize) -> H::Fr {
         let b = key & !1;
         H::hash(&[

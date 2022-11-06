@@ -19,3 +19,13 @@ pub type DBKey = [u8; 8];
 
 /// Denotes values in a database
 pub type Value = Vec<u8>;
+
+/// Denotes Error type, for handling DB interaction errors
+#[derive(Debug)]
+pub struct Error(String);
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
