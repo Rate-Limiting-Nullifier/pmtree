@@ -10,32 +10,37 @@ struct MySled(sled::Db);
 struct MyFr([u8; 32]);
 
 impl Database for MySled {
-    fn new(dbpath: &str) -> Self {
+    fn new(dbpath: &str) -> Result<Self> {
         let db = sled::open(dbpath).unwrap();
-        assert!(!db.was_recovered(), "Database exists, try load()!");
+        if db.was_recovered() {
+            return Err(Error("Database exists, try load()!".to_string()));
+        }
 
-        MySled(db)
+        Ok(MySled(db))
     }
 
-    fn load(dbpath: &str) -> Self {
+    fn load(dbpath: &str) -> Result<Self> {
         let db = sled::open(dbpath).unwrap();
+
         if !db.was_recovered() {
             println!("Hello world");
             fs::remove_dir_all(dbpath).expect("Error removing db");
-            panic!("Trying to load non-existing database!");
+            return Err(Error("Trying to load non-existing database!".to_string()));
         }
 
-        MySled(db)
+        Ok(MySled(db))
     }
 
-    fn get(&self, key: DBKey) -> Option<Value> {
-        self.0.get(key).unwrap().map(|val| val.to_vec())
+    fn get(&self, key: DBKey) -> Result<Option<Value>> {
+        Ok(self.0.get(key).unwrap().map(|val| val.to_vec()))
     }
 
-    fn put(&mut self, key: DBKey, value: Value) {
+    fn put(&mut self, key: DBKey, value: Value) -> Result<()> {
         self.0.insert(key, value).unwrap();
 
         self.0.flush().unwrap();
+
+        Ok(())
     }
 }
 
@@ -71,8 +76,8 @@ impl Hasher for MyKeccak {
 }
 
 #[test]
-fn insert_delete() {
-    let mut mt = MerkleTree::<MySled, MyKeccak>::new(2, "abacaba");
+fn insert_delete() -> Result<()> {
+    let mut mt = MerkleTree::<MySled, MyKeccak>::new(2, "abacaba")?;
 
     assert_eq!(mt.capacity(), 4);
     assert_eq!(mt.depth(), 2);
@@ -87,7 +92,7 @@ fn insert_delete() {
     let default_tree_root =
         hex!("b4c11951957c6f8f642c4af61cd6b24640fec6dc7fc607ee8206a99e92410d30");
 
-    assert_eq!(mt.root(), MyFr(default_tree_root));
+    assert_eq!(mt.root()?, MyFr(default_tree_root));
 
     let roots = [
         hex!("c1ba1812ff680ce84c1d5b4f1087eeb08147a4d510f3496b2849df3a73f5af95"),
@@ -97,15 +102,19 @@ fn insert_delete() {
     ];
 
     for i in 0..leaves.len() {
-        mt.update_next(MyFr(leaves[i]));
-        assert_eq!(mt.root(), MyFr(roots[i]));
+        mt.update_next(MyFr(leaves[i]))?;
+        assert_eq!(mt.root()?, MyFr(roots[i]));
     }
 
     for i in (0..leaves.len()).rev() {
-        mt.delete(i);
+        mt.delete(i)?;
     }
 
-    assert_eq!(mt.root(), MyFr(default_tree_root));
+    assert_eq!(mt.root()?, MyFr(default_tree_root));
+
+    assert!(mt.update_next(MyFr(leaves[0])).is_err());
 
     fs::remove_dir_all("abacaba").expect("Error removing db");
+
+    Ok(())
 }

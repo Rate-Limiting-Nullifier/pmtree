@@ -101,7 +101,7 @@ where
 
     /// Sets a leaf at the specified tree index
     pub fn set(&mut self, key: usize, leaf: H::Fr) -> Result<()> {
-        if key < self.capacity() {
+        if key >= self.capacity() {
             return Err(Error("Merkle Tree is full!".to_string()));
         }
 
@@ -153,7 +153,7 @@ where
 
     /// Deletes a leaf at the `key` by setting it to its default value
     pub fn delete(&mut self, key: usize) -> Result<()> {
-        if key < self.next_index {
+        if key >= self.next_index {
             return Err(Error("The key doesn't exist!".to_string()));
         }
 
