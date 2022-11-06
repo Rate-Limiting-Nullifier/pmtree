@@ -85,7 +85,7 @@ fn insert_delete() {
     ];
 
     for i in 0..leaves.len() {
-        mt.insert(MyFr(leaves[i]));
+        mt.update_next(MyFr(leaves[i]));
         assert_eq!(mt.root(), MyFr(roots[i]));
     }
 
