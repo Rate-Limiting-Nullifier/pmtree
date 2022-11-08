@@ -19,7 +19,7 @@ impl From<Key> for DBKey {
     }
 }
 
-/// Merkle Tree implementation
+/// The Merkle Tree structure
 pub struct MerkleTree<D, H>
 where
     D: Database,
@@ -31,6 +31,10 @@ where
     next_index: usize,
     cache: Vec<H::Fr>,
 }
+
+/// The Merkle proof structure
+#[derive(Clone, PartialEq, Eq)]
+pub struct MerkleProof<H: Hasher>(pub Vec<(H::Fr, u8)>);
 
 impl<D, H> MerkleTree<D, H>
 where
@@ -187,5 +191,46 @@ where
     /// Returns the depth of the tree
     pub fn depth(&self) -> usize {
         self.depth
+    }
+}
+
+impl<H: Hasher> MerkleProof<H> {
+    /// Computes the Merkle root by iteratively hashing specified Merkle proof with specified leaf
+    pub fn compute_root_from(&self, leaf: &H::Fr) -> H::Fr {
+        let mut acc = *leaf;
+        for w in self.0.iter() {
+            if w.1 == 0 {
+                acc = H::hash(&[acc, w.0]);
+            } else {
+                acc = H::hash(&[w.0, acc]);
+            }
+        }
+
+        acc
+    }
+
+    /// Computes the leaf index corresponding to a Merkle proof
+    pub fn leaf_index(&self) -> usize {
+        let binary_repr = self.get_path_index();
+
+        binary_repr
+            .into_iter()
+            .rev()
+            .fold(0, |acc, digit| (acc << 1) + usize::from(digit))
+    }
+
+    /// Returns the path indexes forming a Merkle Proof
+    pub fn get_path_index(&self) -> Vec<u8> {
+        self.0.iter().map(|x| x.1).collect()
+    }
+
+    /// Returns the path elements forming a Merkle proof
+    pub fn get_path_elements(&self) -> Vec<H::Fr> {
+        self.0.iter().map(|x| x.0).collect()
+    }
+
+    /// Returns the length of a Merkle proof
+    pub fn length(&self) -> usize {
+        self.0.len()
     }
 }
