@@ -106,6 +106,10 @@ fn insert_delete() -> Result<()> {
         assert_eq!(mt.root(), MyFr(roots[i]));
     }
 
+    for (i, &leaf) in leaves.iter().enumerate() {
+        assert!(mt.verify(&MyFr(leaf), &mt.proof(i)?));
+    }
+
     for i in (0..leaves.len()).rev() {
         mt.delete(i)?;
     }
