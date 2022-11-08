@@ -30,6 +30,7 @@ where
     depth: usize,
     next_index: usize,
     cache: Vec<H::Fr>,
+    root: H::Fr,
 }
 
 /// The Merkle proof structure
@@ -66,12 +67,15 @@ where
             db.put(Key(i, 0).into(), cache[i].into())?;
         }
 
+        let root = cache[0];
+
         Ok(Self {
             db,
             h: PhantomData,
             depth,
             next_index,
             cache,
+            root,
         })
     }
 
@@ -79,6 +83,9 @@ where
     pub fn load(dbpath: &str) -> Result<Self> {
         // Load existing db instance
         let db = D::load(dbpath)?;
+
+        // Load root
+        let root = db.get(Key(0, 0).into())?.unwrap().into();
 
         // Load depth & next_index values from db
         let depth = db.get(DEPTH_KEY)?.unwrap().try_into().unwrap();
@@ -100,6 +107,7 @@ where
             depth,
             next_index,
             cache,
+            root,
         })
     }
 
@@ -127,11 +135,16 @@ where
         let mut depth = self.depth;
         let mut i = key;
 
-        while depth != 0 {
+        loop {
             let value = self.hash_couple(depth, i)?;
             i >>= 1;
             depth -= 1;
             self.db.put(Key(depth, i).into(), value.into())?;
+
+            if depth == 0 {
+                self.root = value;
+                break;
+            }
         }
 
         Ok(())
@@ -173,9 +186,39 @@ where
         Ok(())
     }
 
+    /// Computes a Merkle proof for the leaf at the specified index
+    pub fn proof(&self, index: usize) -> Result<MerkleProof<H>> {
+        if index >= self.capacity() {
+            return Err(Error("Index exceeds set size!".to_string()));
+        }
+
+        let mut witness = Vec::with_capacity(self.depth);
+
+        let mut i = index;
+        let mut depth = self.depth;
+        while depth != 0 {
+            i ^= 1;
+            witness.push((
+                self.get_elem(Key(depth, i))?,
+                (1 - (i & 1)).try_into().unwrap(),
+            ));
+            i >>= 1;
+            depth -= 1;
+        }
+
+        Ok(MerkleProof(witness))
+    }
+
+    /// Verifies a Merkle proof with respect to the input leaf and the tree root
+    pub fn verify(&self, leaf: &H::Fr, witness: &MerkleProof<H>) -> bool {
+        let expected_root = witness.compute_root_from(leaf);
+
+        self.root() == expected_root
+    }
+
     /// Returns the root of the tree
-    pub fn root(&self) -> Result<H::Fr> {
-        Ok(self.db.get(Key(0, 0).into())?.unwrap().into())
+    pub fn root(&self) -> H::Fr {
+        self.root
     }
 
     /// Returns the total number of leaves set

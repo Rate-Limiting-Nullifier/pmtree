@@ -77,7 +77,7 @@ fn insert_delete() -> Result<()> {
     let default_tree_root =
         hex!("b4c11951957c6f8f642c4af61cd6b24640fec6dc7fc607ee8206a99e92410d30");
 
-    assert_eq!(mt.root()?, MyFr(default_tree_root));
+    assert_eq!(mt.root(), MyFr(default_tree_root));
 
     let roots = [
         hex!("c1ba1812ff680ce84c1d5b4f1087eeb08147a4d510f3496b2849df3a73f5af95"),
@@ -88,14 +88,14 @@ fn insert_delete() -> Result<()> {
 
     for i in 0..leaves.len() {
         mt.update_next(MyFr(leaves[i]))?;
-        assert_eq!(mt.root()?, MyFr(roots[i]));
+        assert_eq!(mt.root(), MyFr(roots[i]));
     }
 
     for i in (0..leaves.len()).rev() {
         mt.delete(i)?;
     }
 
-    assert_eq!(mt.root()?, MyFr(default_tree_root));
+    assert_eq!(mt.root(), MyFr(default_tree_root));
 
     assert!(mt.update_next(MyFr(leaves[0])).is_err());
 
