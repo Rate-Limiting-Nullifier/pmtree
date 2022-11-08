@@ -254,9 +254,7 @@ impl<H: Hasher> MerkleProof<H> {
 
     /// Computes the leaf index corresponding to a Merkle proof
     pub fn leaf_index(&self) -> usize {
-        let binary_repr = self.get_path_index();
-
-        binary_repr
+        self.get_path_index()
             .into_iter()
             .rev()
             .fold(0, |acc, digit| (acc << 1) + usize::from(digit))
