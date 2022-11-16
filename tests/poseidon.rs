@@ -83,15 +83,13 @@ fn poseidon_memory() -> Result<()> {
         MyFr(Fr::from_str("78912").unwrap()),
     ];
 
-    mt.update_next(leaves[0])?;
+    for &leaf in &leaves {
+        mt.update_next(leaf)?;
+    }
 
-    // for &leaf in &leaves {
-    //     mt.update_next(leaf)?;
-    // }
-
-    // for (i, leaf) in leaves.iter().enumerate() {
-    //     assert!(mt.verify(leaf, &mt.proof(i)?));
-    // }
+    for (i, leaf) in leaves.iter().enumerate() {
+        assert!(mt.verify(leaf, &mt.proof(i)?));
+    }
 
     Ok(())
 }
