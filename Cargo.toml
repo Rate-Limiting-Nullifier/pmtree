@@ -7,3 +7,5 @@ edition = "2021"
 hex-literal = "0.3.4"
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 sled = "0.34.7"
+rln = { git = "https://github.com/vacp2p/zerokit", rev = "490206a" }
+ark-serialize = "0.3.0"
