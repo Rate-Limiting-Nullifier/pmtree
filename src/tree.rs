@@ -61,10 +61,10 @@ where
 
         // Initialize one branch of the `Merkle Tree` from bottom to top
         cache[depth] = H::default_leaf();
-        db.put(Key(depth, 0).into(), cache[depth].into())?;
+        db.put(Key(depth, 0).into(), H::serialize(cache[depth]))?;
         for i in (0..depth).rev() {
             cache[i] = H::hash(&[cache[i + 1], cache[i + 1]]);
-            db.put(Key(i, 0).into(), cache[i].into())?;
+            db.put(Key(i, 0).into(), H::serialize(cache[i]))?;
         }
 
         let root = cache[0];
@@ -85,7 +85,7 @@ where
         let db = D::load(dbpath)?;
 
         // Load root
-        let root = db.get(Key(0, 0).into())?.unwrap().into();
+        let root = H::deserialize(db.get(Key(0, 0).into())?.unwrap());
 
         // Load depth & next_index values from db
         let depth = db.get(DEPTH_KEY)?.unwrap().try_into().unwrap();
@@ -117,7 +117,8 @@ where
             return Err(Error("Merkle Tree is full!".to_string()));
         }
 
-        self.db.put(Key(self.depth, key).into(), leaf.into())?;
+        self.db
+            .put(Key(self.depth, key).into(), H::serialize(leaf))?;
         self.recalculate_from(key)?;
 
         // Update next_index in memory
@@ -139,7 +140,7 @@ where
             let value = self.hash_couple(depth, i)?;
             i >>= 1;
             depth -= 1;
-            self.db.put(Key(depth, i).into(), value.into())?;
+            self.db.put(Key(depth, i).into(), H::serialize(value))?;
 
             if depth == 0 {
                 self.root = value;
@@ -161,11 +162,12 @@ where
 
     // Returns elem by the key
     fn get_elem(&self, key: Key) -> Result<H::Fr> {
-        Ok(self
+        let res = self
             .db
             .get(key.into())?
-            .unwrap_or_else(|| self.cache[key.0].into())
-            .into())
+            .map_or(self.cache[key.0], |value| H::deserialize(value));
+
+        Ok(res)
     }
 
     /// Deletes a leaf at the `key` by setting it to its default value

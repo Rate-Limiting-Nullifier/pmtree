@@ -6,9 +6,6 @@ use tiny_keccak::{Hasher as _, Keccak};
 struct MyKeccak(Keccak);
 struct MySled(sled::Db);
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-struct MyFr([u8; 32]);
-
 impl Database for MySled {
     fn new(dbpath: &str) -> Result<Self> {
         let db = sled::open(dbpath).unwrap();
@@ -44,40 +41,35 @@ impl Database for MySled {
     }
 }
 
-impl From<Vec<u8>> for MyFr {
-    fn from(v: Vec<u8>) -> Self {
-        let v = v.try_into().unwrap();
-        MyFr(v)
-    }
-}
-
-impl From<MyFr> for Vec<u8> {
-    fn from(v: MyFr) -> Self {
-        v.0.to_vec()
-    }
-}
-
 impl Hasher for MyKeccak {
-    type Fr = MyFr;
+    type Fr = [u8; 32];
 
     fn default_leaf() -> Self::Fr {
-        MyFr([0; 32])
+        [0; 32]
+    }
+
+    fn serialize(value: Self::Fr) -> Value {
+        value.to_vec()
+    }
+
+    fn deserialize(value: Value) -> Self::Fr {
+        value.to_vec().try_into().unwrap()
     }
 
     fn hash(input: &[Self::Fr]) -> Self::Fr {
         let mut output = [0; 32];
         let mut hasher = Keccak::v256();
         for element in input {
-            hasher.update(&element.0);
+            hasher.update(element);
         }
         hasher.finalize(&mut output);
-        MyFr(output)
+        output
     }
 }
 
 #[test]
 fn insert_delete() -> Result<()> {
-    let mut mt = MerkleTree::<MySled, MyKeccak>::new(2, "abacaba")?;
+    let mut mt = MerkleTree::<MySled, MyKeccak>::new(2, "abacabas")?;
 
     assert_eq!(mt.capacity(), 4);
     assert_eq!(mt.depth(), 2);
@@ -92,7 +84,7 @@ fn insert_delete() -> Result<()> {
     let default_tree_root =
         hex!("b4c11951957c6f8f642c4af61cd6b24640fec6dc7fc607ee8206a99e92410d30");
 
-    assert_eq!(mt.root(), MyFr(default_tree_root));
+    assert_eq!(mt.root(), default_tree_root);
 
     let roots = [
         hex!("c1ba1812ff680ce84c1d5b4f1087eeb08147a4d510f3496b2849df3a73f5af95"),
@@ -102,23 +94,23 @@ fn insert_delete() -> Result<()> {
     ];
 
     for i in 0..leaves.len() {
-        mt.update_next(MyFr(leaves[i]))?;
-        assert_eq!(mt.root(), MyFr(roots[i]));
+        mt.update_next(leaves[i])?;
+        assert_eq!(mt.root(), roots[i]);
     }
 
     for (i, &leaf) in leaves.iter().enumerate() {
-        assert!(mt.verify(&MyFr(leaf), &mt.proof(i)?));
+        assert!(mt.verify(&leaf, &mt.proof(i)?));
     }
 
     for i in (0..leaves.len()).rev() {
         mt.delete(i)?;
     }
 
-    assert_eq!(mt.root(), MyFr(default_tree_root));
+    assert_eq!(mt.root(), default_tree_root);
 
-    assert!(mt.update_next(MyFr(leaves[0])).is_err());
+    assert!(mt.update_next(leaves[0]).is_err());
 
-    fs::remove_dir_all("abacaba").expect("Error removing db");
+    fs::remove_dir_all("abacabas").expect("Error removing db");
 
     Ok(())
 }
