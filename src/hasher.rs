@@ -12,7 +12,9 @@ pub trait Hasher {
     fn deserialize(value: Value) -> Self::Fr;
 
     /// Outputs the default leaf (Fr::default())
-    fn default_leaf() -> Self::Fr;
+    fn default_leaf() -> Self::Fr {
+        Self::Fr::default()
+    }
 
     /// Calculates hash-function
     fn hash(input: &[Self::Fr]) -> Self::Fr;
