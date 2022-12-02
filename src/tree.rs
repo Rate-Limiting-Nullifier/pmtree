@@ -188,6 +188,13 @@ where
         Ok(())
     }
 
+    /// Batch insertion, updates the tree in parallel.
+    /// Only available as a feature
+    #[cfg(feature = "batch_insert")]
+    pub fn batch_insert(&mut self, leaves: &[H::Fr]) -> Result<()> {
+        Ok(())
+    }
+
     /// Computes a Merkle proof for the leaf at the specified index
     pub fn proof(&self, index: usize) -> Result<MerkleProof<H>> {
         if index >= self.capacity() {
