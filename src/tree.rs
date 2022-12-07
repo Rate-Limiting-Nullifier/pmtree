@@ -42,11 +42,9 @@ where
     D: Database,
     H: Hasher,
 {
-    /// Creates tree with specified depth and default dbpath.
-    ///
-    /// USE FOR IN-MEMORY DATABASE ONLY!
+    /// Creates tree with specified depth and default "pmtree_db" dbpath.
     pub fn default(depth: usize) -> Result<Self> {
-        Self::new(depth, "")
+        Self::new(depth, "pmtree_db")
     }
 
     /// Creates new `MerkleTree` and store it to the specified path/db
