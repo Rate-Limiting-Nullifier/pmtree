@@ -20,7 +20,6 @@ impl Database for MySled {
         let db = sled::open(dbpath).unwrap();
 
         if !db.was_recovered() {
-            println!("Hello world");
             fs::remove_dir_all(dbpath).expect("Error removing db");
             return Err(Error("Trying to load non-existing database!".to_string()));
         }
