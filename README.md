@@ -16,12 +16,6 @@
 pmtree = { git = "https://github.com/Rate-Limiting-Nullifier/pmtree" }
 ```
 
-To use batch insertions you must enable `batch_insert` feature:
-```toml
-[dependencies]
-pmtree = { git = "https://github.com/Rate-Limiting-Nullifier/pmtree", features = ["batch_insert"] }
-```
-
 ## Example
 
 In-Memory DB (HashMap) + Keccak

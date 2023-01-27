@@ -194,9 +194,8 @@ where
     }
 
     /// Batch insertion, updates the tree in parallel.
-    /// Only available as a feature
-    #[cfg(feature = "batch_insert")]
     pub fn batch_insert(&mut self, leaves: &[H::Fr]) -> Result<()> {
+        // if leaves.len()
         Ok(())
     }
 
