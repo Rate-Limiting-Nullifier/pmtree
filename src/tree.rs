@@ -1,6 +1,6 @@
 use crate::*;
 
-use std::cmp::max;
+use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -243,11 +243,11 @@ where
         let half = 1 << (self.depth - key.0 - 1);
 
         if start < half {
-            self.fill_nodes(left, start, end, subtree)?;
+            self.fill_nodes(left, start, min(end, half), subtree)?;
         }
 
         if end > half {
-            self.fill_nodes(right, start, end, subtree)?;
+            self.fill_nodes(right, 0, end - half, subtree)?;
         }
 
         Ok(())
