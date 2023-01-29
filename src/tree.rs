@@ -3,6 +3,7 @@ use crate::*;
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::marker::PhantomData;
+use std::sync::{Arc, Mutex};
 
 // db[DEPTH_KEY] = depth
 const DEPTH_KEY: DBKey = (u64::MAX - 1).to_be_bytes();
@@ -12,7 +13,7 @@ const NEXT_INDEX_KEY: DBKey = u64::MAX.to_be_bytes();
 
 // Denotes keys (depth, index) in Merkle Tree. Can be converted to DBKey
 // TODO! Think about using hashing for that
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Key(usize, usize);
 impl From<Key> for DBKey {
     fn from(key: Key) -> Self {
@@ -210,11 +211,13 @@ where
         subtree.insert(root_key, self.root);
         self.fill_nodes(root_key, self.next_index, end, &mut subtree)?;
 
-        rayon::ThreadPoolBuilder::new()
+        let subtree = Arc::new(Mutex::new(subtree));
+
+        let n = rayon::ThreadPoolBuilder::new()
             .num_threads(8)
             .build()
             .unwrap()
-            .install(|| Self::batch_recalculate(root_key, &subtree));
+            .install(|| Self::batch_recalculate(root_key, subtree, self.depth));
 
         Ok(())
     }
@@ -254,8 +257,25 @@ where
     }
 
     // Recalculates tree in parallel (in-memory)
-    fn batch_recalculate(key: Key, subtree: &HashMap<Key, H::Fr>) {
-        todo!()
+    fn batch_recalculate(
+        key: Key,
+        subtree: Arc<Mutex<HashMap<Key, H::Fr>>>,
+        depth: usize,
+    ) -> H::Fr {
+        // if key.0 == depth {
+        //     return subtree.into_inner().unwrap().get(&key).u;
+        // }
+
+        // let (left, right) = rayon::join(
+        //     || Self::batch_recalculate(key, subtree, depth),
+        //     || Self::batch_recalculate(key, subtree, depth),
+        // );
+
+        H::default_leaf()
+    }
+
+    fn db_batch_insert(&mut self, subtree: HashMap<Key, H::Fr>) -> Result<()> {
+        Ok(())
     }
 
     /// Computes a Merkle proof for the leaf at the specified index
