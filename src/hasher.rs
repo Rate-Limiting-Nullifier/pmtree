@@ -3,7 +3,7 @@ use crate::*;
 /// Trait that must be implemented for Hash Function
 pub trait Hasher {
     /// Native type for the hash-function
-    type Fr: Copy + Eq + Default;
+    type Fr: Copy + Eq + Default + Sync;
 
     /// Serializes Self::Fr
     fn serialize(value: Self::Fr) -> Value;

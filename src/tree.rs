@@ -1,5 +1,7 @@
 use crate::*;
+
 use std::cmp::max;
+use std::collections::HashMap;
 use std::marker::PhantomData;
 
 // db[DEPTH_KEY] = depth
@@ -10,7 +12,7 @@ const NEXT_INDEX_KEY: DBKey = u64::MAX.to_be_bytes();
 
 // Denotes keys (depth, index) in Merkle Tree. Can be converted to DBKey
 // TODO! Think about using hashing for that
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 struct Key(usize, usize);
 impl From<Key> for DBKey {
     fn from(key: Key) -> Self {
@@ -195,8 +197,65 @@ where
 
     /// Batch insertion, updates the tree in parallel.
     pub fn batch_insert(&mut self, leaves: &[H::Fr]) -> Result<()> {
-        // if leaves.len()
+        let end = self.next_index + leaves.len();
+
+        if end > self.capacity() {
+            return Err(Error("Not enough space to insert the leaves!".to_string()));
+        }
+
+        let mut subtree = HashMap::<Key, H::Fr>::new();
+
+        let root_key = Key(0, 0);
+
+        subtree.insert(root_key, self.root);
+        self.fill_nodes(root_key, self.next_index, end, &mut subtree)?;
+
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(8)
+            .build()
+            .unwrap()
+            .install(|| Self::batch_recalculate(root_key, &subtree));
+
         Ok(())
+    }
+
+    // Fills hashmap subtree
+    fn fill_nodes(
+        &self,
+        key: Key,
+        start: usize,
+        end: usize,
+        subtree: &mut HashMap<Key, H::Fr>,
+    ) -> Result<()> {
+        if key.0 == self.depth {
+            return Ok(());
+        }
+
+        let left = Key(key.0 + 1, key.1 * 2);
+        let right = Key(key.0 + 1, key.1 * 2 + 1);
+
+        let left_val = self.get_elem(left)?;
+        let right_val = self.get_elem(right)?;
+
+        subtree.insert(left, left_val);
+        subtree.insert(right, right_val);
+
+        let half = 1 << (self.depth - key.0 - 1);
+
+        if start < half {
+            self.fill_nodes(left, start, end, subtree)?;
+        }
+
+        if end > half {
+            self.fill_nodes(right, start, end, subtree)?;
+        }
+
+        Ok(())
+    }
+
+    // Recalculates tree in parallel (in-memory)
+    fn batch_recalculate(key: Key, subtree: &HashMap<Key, H::Fr>) {
+        todo!()
     }
 
     /// Computes a Merkle proof for the leaf at the specified index
