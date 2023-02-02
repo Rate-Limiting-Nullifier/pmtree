@@ -253,7 +253,9 @@ where
         from: usize,
     ) -> Result<()> {
         if key.0 == self.depth {
-            subtree.insert(key, leaves[key.1 - from]);
+            if key.1 >= from {
+                subtree.insert(key, leaves[key.1 - from]);
+            }
             return Ok(());
         }
 
