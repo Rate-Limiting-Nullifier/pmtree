@@ -103,6 +103,14 @@ impl Database for MySled {
     }
 
     fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()> {
+        let mut batch = sled::Batch::default();
+
+        for (key, value) in subtree {
+            batch.insert(&key, value);
+        }
+
+        self.0.apply_batch(batch).unwrap();
+
         Ok(())
     }
 }
