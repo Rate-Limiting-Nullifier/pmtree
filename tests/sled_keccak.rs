@@ -126,3 +126,26 @@ fn insert_delete() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn batch_insertions() -> Result<()> {
+    let mut mt = MerkleTree::<MySled, MyKeccak>::new(2, "abacabas")?;
+
+    let leaves = [
+        hex!("0000000000000000000000000000000000000000000000000000000000000001"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000002"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000003"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000004"),
+    ];
+
+    mt.batch_insert(&leaves)?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36")
+    );
+
+    fs::remove_dir_all("abacabas").expect("Error removing db");
+
+    Ok(())
+}
