@@ -3,7 +3,7 @@ use crate::*;
 use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 // db[DEPTH_KEY] = depth
 const DEPTH_KEY: DBKey = (u64::MAX - 1).to_be_bytes();
@@ -211,7 +211,7 @@ where
         subtree.insert(root_key, self.root);
         self.fill_nodes(root_key, self.next_index, end, &mut subtree)?;
 
-        let subtree = Arc::new(Mutex::new(subtree));
+        let subtree = Arc::new(RwLock::new(subtree));
 
         let root_val = rayon::ThreadPoolBuilder::new()
             .num_threads(8)
@@ -219,9 +219,9 @@ where
             .unwrap()
             .install(|| Self::batch_recalculate(root_key, Arc::clone(&subtree), self.depth));
 
-        let subtree = Mutex::into_inner(Arc::try_unwrap(subtree).unwrap()).unwrap();
+        let subtree = RwLock::into_inner(Arc::try_unwrap(subtree).unwrap()).unwrap();
 
-        // self.db.put_batch(&subtree.into_iter().)?;
+        self.db.put_batch(&subtree.into_iter().)?;
 
         // Update root value and next_index in memory
         self.root = root_val;
@@ -271,21 +271,24 @@ where
     // Recalculates tree in parallel (in-memory)
     fn batch_recalculate(
         key: Key,
-        subtree: Arc<Mutex<HashMap<Key, H::Fr>>>,
+        subtree: Arc<RwLock<HashMap<Key, H::Fr>>>,
         depth: usize,
     ) -> H::Fr {
-        if key.0 == depth {
-            return *subtree.lock().unwrap().get(&key).unwrap();
+        let left_child = Key(key.0 + 1, key.1 * 2);
+        let right_child = Key(key.0 + 1, key.1 * 2 + 1);
+
+        if key.0 == depth || subtree.read().unwrap().contains_key(&left_child) {
+            return *subtree.read().unwrap().get(&key).unwrap();
         }
 
         let (left, right) = rayon::join(
-            || Self::batch_recalculate(Key(key.0 + 1, key.1 * 2), Arc::clone(&subtree), depth),
-            || Self::batch_recalculate(Key(key.0 + 1, key.1 * 2 + 1), Arc::clone(&subtree), depth),
+            || Self::batch_recalculate(left_child, Arc::clone(&subtree), depth),
+            || Self::batch_recalculate(right_child, Arc::clone(&subtree), depth),
         );
 
         let result = H::hash(&[left, right]);
 
-        subtree.lock().unwrap().insert(key, result);
+        subtree.write().unwrap().insert(key, result);
 
         result
     }
