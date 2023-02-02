@@ -21,5 +21,5 @@ pub trait Database {
     fn put(&mut self, key: DBKey, value: Value) -> Result<()>;
 
     /// Batc
-    fn put_batch(&mut self, subtree: &HashMap<DBKey, Value>) -> Result<()>;
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()>;
 }

@@ -25,7 +25,9 @@ impl Database for MemoryDB {
         Ok(())
     }
 
-    fn put_batch(&mut self, subtree: &HashMap<DBKey, Value>) -> Result<()> {
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()> {
+        self.0.extend(subtree.into_iter());
+
         Ok(())
     }
 }
@@ -98,6 +100,22 @@ fn insert_delete() -> Result<()> {
     assert_eq!(mt.root(), default_tree_root);
 
     assert!(mt.update_next(leaves[0]).is_err());
+
+    Ok(())
+}
+
+#[test]
+fn batch_insertions() -> Result<()> {
+    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, "abacaba")?;
+
+    let leaves = [
+        hex!("0000000000000000000000000000000000000000000000000000000000000001"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000002"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000003"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000004"),
+    ];
+
+    mt.batch_insert(&leaves)?;
 
     Ok(())
 }

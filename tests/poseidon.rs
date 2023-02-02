@@ -62,7 +62,9 @@ impl Database for MemoryDB {
         Ok(())
     }
 
-    fn put_batch(&mut self, subtree: &HashMap<DBKey, Value>) -> Result<()> {
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()> {
+        self.0.extend(subtree.into_iter());
+
         Ok(())
     }
 }
@@ -100,7 +102,7 @@ impl Database for MySled {
         Ok(())
     }
 
-    fn put_batch(&mut self, subtree: &HashMap<DBKey, Value>) -> Result<()> {
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()> {
         Ok(())
     }
 }

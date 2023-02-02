@@ -221,7 +221,12 @@ where
 
         let subtree = RwLock::into_inner(Arc::try_unwrap(subtree).unwrap()).unwrap();
 
-        self.db.put_batch(&subtree.into_iter().)?;
+        self.db.put_batch(
+            subtree
+                .into_iter()
+                .map(|(key, value)| (key.into(), H::serialize(value)))
+                .collect(),
+        )?;
 
         // Update root value and next_index in memory
         self.root = root_val;
