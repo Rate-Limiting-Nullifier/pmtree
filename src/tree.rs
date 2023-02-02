@@ -2,7 +2,6 @@ use crate::*;
 
 use std::cmp::{max, min};
 use std::collections::HashMap;
-use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
 
 // db[DEPTH_KEY] = depth
@@ -29,7 +28,6 @@ where
     H: Hasher,
 {
     db: D,
-    h: PhantomData<H>,
     depth: usize,
     next_index: usize,
     cache: Vec<H::Fr>,
@@ -79,7 +77,6 @@ where
 
         Ok(Self {
             db,
-            h: PhantomData,
             depth,
             next_index,
             cache,
@@ -111,7 +108,6 @@ where
 
         Ok(Self {
             db,
-            h: PhantomData,
             depth,
             next_index,
             cache,
@@ -211,6 +207,12 @@ where
         subtree.insert(root_key, self.root);
         self.fill_nodes(root_key, self.next_index, end, &mut subtree)?;
 
+        ////// TODO! Refactor later
+        for i in self.next_index..end {
+            subtree.insert(Key(self.depth, i), leaves[i - self.next_index]);
+        }
+        //////
+
         let subtree = Arc::new(RwLock::new(subtree));
 
         let root_val = rayon::ThreadPoolBuilder::new()
@@ -282,7 +284,7 @@ where
         let left_child = Key(key.0 + 1, key.1 * 2);
         let right_child = Key(key.0 + 1, key.1 * 2 + 1);
 
-        if key.0 == depth || subtree.read().unwrap().contains_key(&left_child) {
+        if key.0 == depth || !subtree.read().unwrap().contains_key(&left_child) {
             return *subtree.read().unwrap().get(&key).unwrap();
         }
 
