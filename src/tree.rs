@@ -205,13 +205,14 @@ where
         let root_key = Key(0, 0);
 
         subtree.insert(root_key, self.root);
-        self.fill_nodes(root_key, self.next_index, end, &mut subtree)?;
-
-        ////// TODO! Refactor later
-        for i in self.next_index..end {
-            subtree.insert(Key(self.depth, i), leaves[i - self.next_index]);
-        }
-        //////
+        self.fill_nodes(
+            root_key,
+            self.next_index,
+            end,
+            &mut subtree,
+            leaves,
+            self.next_index,
+        )?;
 
         let subtree = Arc::new(RwLock::new(subtree));
 
@@ -248,8 +249,11 @@ where
         start: usize,
         end: usize,
         subtree: &mut HashMap<Key, H::Fr>,
+        leaves: &[H::Fr],
+        from: usize,
     ) -> Result<()> {
         if key.0 == self.depth {
+            subtree.insert(key, leaves[key.1 - from]);
             return Ok(());
         }
 
@@ -265,11 +269,11 @@ where
         let half = 1 << (self.depth - key.0 - 1);
 
         if start < half {
-            self.fill_nodes(left, start, min(end, half), subtree)?;
+            self.fill_nodes(left, start, min(end, half), subtree, leaves, from)?;
         }
 
         if end > half {
-            self.fill_nodes(right, 0, end - half, subtree)?;
+            self.fill_nodes(right, 0, end - half, subtree, leaves, from)?;
         }
 
         Ok(())
