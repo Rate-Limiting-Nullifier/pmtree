@@ -24,6 +24,10 @@ impl Database for MemoryDB {
 
         Ok(())
     }
+
+    fn put_batch(&mut self, subtree: &HashMap<DBKey, Value>) -> Result<()> {
+        Ok(())
+    }
 }
 
 impl Hasher for MyKeccak {

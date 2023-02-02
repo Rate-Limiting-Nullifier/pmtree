@@ -213,11 +213,23 @@ where
 
         let subtree = Arc::new(Mutex::new(subtree));
 
-        let n = rayon::ThreadPoolBuilder::new()
+        let root_val = rayon::ThreadPoolBuilder::new()
             .num_threads(8)
             .build()
             .unwrap()
-            .install(|| Self::batch_recalculate(root_key, subtree, self.depth));
+            .install(|| Self::batch_recalculate(root_key, Arc::clone(&subtree), self.depth));
+
+        let subtree = Mutex::into_inner(Arc::try_unwrap(subtree).unwrap()).unwrap();
+
+        // self.db.put_batch(&subtree.into_iter().)?;
+
+        // Update root value and next_index in memory
+        self.root = root_val;
+        self.next_index = end;
+
+        // Update next_index value in db
+        self.db
+            .put(NEXT_INDEX_KEY, self.next_index.to_be_bytes().to_vec())?;
 
         Ok(())
     }
@@ -262,20 +274,20 @@ where
         subtree: Arc<Mutex<HashMap<Key, H::Fr>>>,
         depth: usize,
     ) -> H::Fr {
-        // if key.0 == depth {
-        //     return subtree.into_inner().unwrap().get(&key).u;
-        // }
+        if key.0 == depth {
+            return *subtree.lock().unwrap().get(&key).unwrap();
+        }
 
-        // let (left, right) = rayon::join(
-        //     || Self::batch_recalculate(key, subtree, depth),
-        //     || Self::batch_recalculate(key, subtree, depth),
-        // );
+        let (left, right) = rayon::join(
+            || Self::batch_recalculate(Key(key.0 + 1, key.1 * 2), Arc::clone(&subtree), depth),
+            || Self::batch_recalculate(Key(key.0 + 1, key.1 * 2 + 1), Arc::clone(&subtree), depth),
+        );
 
-        H::default_leaf()
-    }
+        let result = H::hash(&[left, right]);
 
-    fn db_batch_insert(&mut self, subtree: HashMap<Key, H::Fr>) -> Result<()> {
-        Ok(())
+        subtree.lock().unwrap().insert(key, result);
+
+        result
     }
 
     /// Computes a Merkle proof for the leaf at the specified index

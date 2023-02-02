@@ -1,5 +1,6 @@
 use hex_literal::hex;
 use pmtree::*;
+use std::collections::HashMap;
 use std::fs;
 use tiny_keccak::{Hasher as _, Keccak};
 
@@ -36,6 +37,10 @@ impl Database for MySled {
 
         self.0.flush().unwrap();
 
+        Ok(())
+    }
+
+    fn put_batch(&mut self, subtree: &HashMap<DBKey, Value>) -> Result<()> {
         Ok(())
     }
 }

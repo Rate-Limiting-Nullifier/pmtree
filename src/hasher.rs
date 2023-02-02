@@ -1,9 +1,11 @@
 use crate::*;
 
+use std::fmt::Debug;
+
 /// Trait that must be implemented for Hash Function
 pub trait Hasher {
     /// Native type for the hash-function
-    type Fr: Copy + Eq + Default + Sync + Send;
+    type Fr: Copy + Eq + Default + Sync + Send + Debug;
 
     /// Serializes Self::Fr
     fn serialize(value: Self::Fr) -> Value;
