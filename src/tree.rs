@@ -217,7 +217,7 @@ where
         let subtree = Arc::new(RwLock::new(subtree));
 
         let root_val = rayon::ThreadPoolBuilder::new()
-            .num_threads(8)
+            .num_threads(rayon::current_num_threads())
             .build()
             .unwrap()
             .install(|| Self::batch_recalculate(root_key, Arc::clone(&subtree), self.depth));
