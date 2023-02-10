@@ -6,12 +6,17 @@ use tiny_keccak::{Hasher as _, Keccak};
 struct MemoryDB(HashMap<DBKey, Value>);
 struct MyKeccak(Keccak);
 
+#[derive(Default)]
+struct MemoryDBConfig;
+
 impl Database for MemoryDB {
-    fn new(_dbpath: &str) -> Result<Self> {
+    type Config = MemoryDBConfig;
+
+    fn new(_db_config: MemoryDBConfig) -> Result<Self> {
         Ok(MemoryDB(HashMap::new()))
     }
 
-    fn load(_dbpath: &str) -> Result<Self> {
+    fn load(_db_config: MemoryDBConfig) -> Result<Self> {
         Err(Box::new(Error("Cannot load in-memory DB".to_string())))
     }
 
@@ -60,7 +65,7 @@ impl Hasher for MyKeccak {
 
 #[test]
 fn insert_delete() -> Result<()> {
-    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, "abacaba")?;
+    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, MemoryDBConfig)?;
 
     assert_eq!(mt.capacity(), 4);
     assert_eq!(mt.depth(), 2);
@@ -106,7 +111,7 @@ fn insert_delete() -> Result<()> {
 
 #[test]
 fn batch_insertions() -> Result<()> {
-    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, "abacaba")?;
+    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, MemoryDBConfig)?;
 
     let leaves = [
         hex!("0000000000000000000000000000000000000000000000000000000000000001"),

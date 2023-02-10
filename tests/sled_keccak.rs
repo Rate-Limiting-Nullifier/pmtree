@@ -7,9 +7,16 @@ use tiny_keccak::{Hasher as _, Keccak};
 struct MyKeccak(Keccak);
 struct MySled(sled::Db);
 
+#[derive(Default)]
+struct SledConfig {
+    path: String,
+}
+
 impl Database for MySled {
-    fn new(dbpath: &str) -> Result<Self> {
-        let db = sled::open(dbpath).unwrap();
+    type Config = SledConfig;
+
+    fn new(db_config: SledConfig) -> Result<Self> {
+        let db = sled::open(db_config.path).unwrap();
         if db.was_recovered() {
             return Err(Box::new(Error("Database exists, try load()!".to_string())));
         }
@@ -17,11 +24,11 @@ impl Database for MySled {
         Ok(MySled(db))
     }
 
-    fn load(dbpath: &str) -> Result<Self> {
-        let db = sled::open(dbpath).unwrap();
+    fn load(db_config: SledConfig) -> Result<Self> {
+        let db = sled::open(&db_config.path).unwrap();
 
         if !db.was_recovered() {
-            fs::remove_dir_all(dbpath).expect("Error removing db");
+            fs::remove_dir_all(&db_config.path).expect("Error removing db");
             return Err(Box::new(Error(
                 "Trying to load non-existing database!".to_string(),
             )));
@@ -83,7 +90,12 @@ impl Hasher for MyKeccak {
 
 #[test]
 fn insert_delete() -> Result<()> {
-    let mut mt = MerkleTree::<MySled, MyKeccak>::new(2, "abacabas")?;
+    let mut mt = MerkleTree::<MySled, MyKeccak>::new(
+        2,
+        SledConfig {
+            path: String::from("abacabas"),
+        },
+    )?;
 
     assert_eq!(mt.capacity(), 4);
     assert_eq!(mt.depth(), 2);
@@ -131,7 +143,12 @@ fn insert_delete() -> Result<()> {
 
 #[test]
 fn batch_insertions() -> Result<()> {
-    let mut mt = MerkleTree::<MySled, MyKeccak>::new(2, "abacabasa")?;
+    let mut mt = MerkleTree::<MySled, MyKeccak>::new(
+        2,
+        SledConfig {
+            path: String::from("abacabasa"),
+        },
+    )?;
 
     let leaves = [
         hex!("0000000000000000000000000000000000000000000000000000000000000001"),

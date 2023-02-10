@@ -43,12 +43,17 @@ impl Hasher for PoseidonHash {
     }
 }
 
+#[derive(Default)]
+struct MemoryDBConfig;
+
 impl Database for MemoryDB {
-    fn new(_dbpath: &str) -> Result<Self> {
+    type Config = MemoryDBConfig;
+
+    fn new(_db_config: MemoryDBConfig) -> Result<Self> {
         Ok(MemoryDB(HashMap::new()))
     }
 
-    fn load(_dbpath: &str) -> Result<Self> {
+    fn load(_db_config: MemoryDBConfig) -> Result<Self> {
         Err(Box::new(Error("Cannot load in-memory DB".to_string())))
     }
 
@@ -69,9 +74,16 @@ impl Database for MemoryDB {
     }
 }
 
+#[derive(Default)]
+struct SledConfig {
+    path: String,
+}
+
 impl Database for MySled {
-    fn new(dbpath: &str) -> Result<Self> {
-        let db = sled::open(dbpath).unwrap();
+    type Config = SledConfig;
+
+    fn new(db_config: SledConfig) -> Result<Self> {
+        let db = sled::open(db_config.path).unwrap();
         if db.was_recovered() {
             return Err(Box::new(Error("Database exists, try load()!".to_string())));
         }
@@ -79,11 +91,11 @@ impl Database for MySled {
         Ok(MySled(db))
     }
 
-    fn load(dbpath: &str) -> Result<Self> {
-        let db = sled::open(dbpath).unwrap();
+    fn load(db_config: SledConfig) -> Result<Self> {
+        let db = sled::open(&db_config.path).unwrap();
 
         if !db.was_recovered() {
-            fs::remove_dir_all(dbpath).expect("Error removing db");
+            fs::remove_dir_all(&db_config.path).expect("Error removing db");
             return Err(Box::new(Error(
                 "Trying to load non-existing database!".to_string(),
             )));
@@ -119,7 +131,7 @@ impl Database for MySled {
 
 #[test]
 fn poseidon_memory() -> Result<()> {
-    let mut mt = MerkleTree::<MemoryDB, PoseidonHash>::new(TEST_TREE_HEIGHT, "abacaba")?;
+    let mut mt = MerkleTree::<MemoryDB, PoseidonHash>::new(TEST_TREE_HEIGHT, MemoryDBConfig)?;
 
     let leaf_index = 3;
 
@@ -243,7 +255,12 @@ fn poseidon_memory() -> Result<()> {
 
 #[test]
 fn poseidon_sled() -> Result<()> {
-    let mut mt = MerkleTree::<MySled, PoseidonHash>::new(TEST_TREE_HEIGHT, "abacaba")?;
+    let mut mt = MerkleTree::<MySled, PoseidonHash>::new(
+        TEST_TREE_HEIGHT,
+        SledConfig {
+            path: String::from("abacaba"),
+        },
+    )?;
 
     let leaf_index = 3;
 

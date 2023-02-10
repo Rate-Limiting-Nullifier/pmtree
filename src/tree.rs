@@ -45,13 +45,13 @@ where
 {
     /// Creates tree with specified depth and default "pmtree_db" dbpath.
     pub fn default(depth: usize) -> Result<Self> {
-        Self::new(depth, "pmtree_db")
+        Self::new(depth, D::Config::default())
     }
 
     /// Creates new `MerkleTree` and store it to the specified path/db
-    pub fn new(depth: usize, dbpath: &str) -> Result<Self> {
+    pub fn new(depth: usize, db_config: D::Config) -> Result<Self> {
         // Create new db instance
-        let mut db = D::new(dbpath)?;
+        let mut db = D::new(db_config)?;
 
         // Insert depth val into db
         let depth_val = depth.to_be_bytes().to_vec();
@@ -85,9 +85,9 @@ where
     }
 
     /// Loads existing Merkle Tree from the specified path/db
-    pub fn load(dbpath: &str) -> Result<Self> {
+    pub fn load(db_config: D::Config) -> Result<Self> {
         // Load existing db instance
-        let db = D::load(dbpath)?;
+        let db = D::load(db_config)?;
 
         // Load root
         let root = H::deserialize(db.get(Key(0, 0).into())?.unwrap());
