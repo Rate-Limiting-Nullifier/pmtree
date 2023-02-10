@@ -30,5 +30,7 @@ impl std::fmt::Display for Error {
     }
 }
 
+impl std::error::Error for Error {}
+
 /// Custom `Result` type with custom `Error` type
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;

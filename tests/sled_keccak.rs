@@ -11,7 +11,7 @@ impl Database for MySled {
     fn new(dbpath: &str) -> Result<Self> {
         let db = sled::open(dbpath).unwrap();
         if db.was_recovered() {
-            return Err(Error("Database exists, try load()!".to_string()));
+            return Err(Box::new(Error("Database exists, try load()!".to_string())));
         }
 
         Ok(MySled(db))
@@ -22,7 +22,9 @@ impl Database for MySled {
 
         if !db.was_recovered() {
             fs::remove_dir_all(dbpath).expect("Error removing db");
-            return Err(Error("Trying to load non-existing database!".to_string()));
+            return Err(Box::new(Error(
+                "Trying to load non-existing database!".to_string(),
+            )));
         }
 
         Ok(MySled(db))

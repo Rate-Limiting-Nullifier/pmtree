@@ -118,7 +118,7 @@ where
     /// Sets a leaf at the specified tree index
     pub fn set(&mut self, key: usize, leaf: H::Fr) -> Result<()> {
         if key >= self.capacity() {
-            return Err(Error("Merkle Tree is full!".to_string()));
+            return Err(Box::new(Error("Merkle Tree is full!".to_string())));
         }
 
         self.db
@@ -177,7 +177,7 @@ where
     /// Deletes a leaf at the `key` by setting it to its default value
     pub fn delete(&mut self, key: usize) -> Result<()> {
         if key >= self.next_index {
-            return Err(Error("The key doesn't exist!".to_string()));
+            return Err(Box::new(Error("The key doesn't exist!".to_string())));
         }
 
         self.set(key, H::default_leaf())?;
@@ -197,7 +197,9 @@ where
         let end = self.next_index + leaves.len();
 
         if end > self.capacity() {
-            return Err(Error("Not enough space to insert the leaves!".to_string()));
+            return Err(Box::new(Error(
+                "Not enough space to insert the leaves!".to_string(),
+            )));
         }
 
         let mut subtree = HashMap::<Key, H::Fr>::new();
@@ -309,7 +311,7 @@ where
     /// Computes a Merkle proof for the leaf at the specified index
     pub fn proof(&self, index: usize) -> Result<MerkleProof<H>> {
         if index >= self.capacity() {
-            return Err(Error("Index exceeds set size!".to_string()));
+            return Err(Box::new(Error("Index exceeds set size!".to_string())));
         }
 
         let mut witness = Vec::with_capacity(self.depth);
