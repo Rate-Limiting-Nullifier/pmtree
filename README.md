@@ -29,7 +29,7 @@ impl Database for MemoryDB {
     }
 
     fn load(_dbpath: &str) -> Result<Self> {
-        Err(Error("Cannot load in-memory DB".to_string()))
+        Err(Box::new(Error("Cannot load in-memory DB".to_string())))
     }
 
     fn get(&self, key: DBKey) -> Result<Option<Value>> {
