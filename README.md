@@ -23,12 +23,17 @@ In-Memory DB (HashMap) + Keccak
 struct MemoryDB(HashMap<DBKey, Value>);
 struct MyKeccak(Keccak);
 
+#[derive(Default)]
+struct MemoryDBConfig;
+
 impl Database for MemoryDB {
-    fn new(_dbpath: &str) -> Result<Self> {
+    type Config = MemoryDBConfig;
+
+    fn new(_db_config: MemoryDBConfig) -> Result<Self> {
         Ok(MemoryDB(HashMap::new()))
     }
 
-    fn load(_dbpath: &str) -> Result<Self> {
+    fn load(_db_config: MemoryDBConfig) -> Result<Self> {
         Err(Box::new(Error("Cannot load in-memory DB".to_string())))
     }
 
@@ -76,7 +81,7 @@ impl Hasher for MyKeccak {
 }
 
 fn main() {
-    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, "abacaba").unwrap();
+    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, MemoryDBConfig).unwrap();
 
     assert_eq!(mt.capacity(), 4);
     assert_eq!(mt.depth(), 2);
