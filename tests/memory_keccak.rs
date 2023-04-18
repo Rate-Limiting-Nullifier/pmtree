@@ -17,7 +17,9 @@ impl Database for MemoryDB {
     }
 
     fn load(_db_config: MemoryDBConfig) -> PmtreeResult<Self> {
-        Err(DatabaseError(DatabaseErrorKind::CannotLoadDatabase))
+        Err(PmtreeErrorKind::DatabaseError(
+            DatabaseErrorKind::CannotLoadDatabase,
+        ))
     }
 
     fn get(&self, key: DBKey) -> PmtreeResult<Option<Value>> {

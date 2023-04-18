@@ -18,7 +18,9 @@ impl Database for MySled {
     fn new(db_config: SledConfig) -> PmtreeResult<Self> {
         let db = sled::open(db_config.path).unwrap();
         if db.was_recovered() {
-            return Err(DatabaseError(DatabaseErrorKind::DatabaseExists));
+            return Err(PmtreeErrorKind::DatabaseError(
+                DatabaseErrorKind::DatabaseExists,
+            ));
         }
 
         Ok(MySled(db))
@@ -29,7 +31,9 @@ impl Database for MySled {
 
         if !db.was_recovered() {
             fs::remove_dir_all(&db_config.path).expect("Error removing db");
-            return Err(DatabaseError(DatabaseErrorKind::CannotLoadDatabase));
+            return Err(PmtreeErrorKind::DatabaseError(
+                DatabaseErrorKind::CannotLoadDatabase,
+            ));
         }
 
         Ok(MySled(db))
