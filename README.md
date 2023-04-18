@@ -29,25 +29,25 @@ struct MemoryDBConfig;
 impl Database for MemoryDB {
     type Config = MemoryDBConfig;
 
-    fn new(_db_config: MemoryDBConfig) -> Result<Self> {
+    fn new(_db_config: MemoryDBConfig) -> PmtreeResult<Self> {
         Ok(MemoryDB(HashMap::new()))
     }
 
-    fn load(_db_config: MemoryDBConfig) -> Result<Self> {
-        Err(Box::new(Error("Cannot load in-memory DB".to_string())))
+    fn load(_db_config: MemoryDBConfig) -> PmtreeResult<Self> {
+        Err(DatabaseError(DatabaseErrorKind::CannotLoadDatabase))
     }
 
-    fn get(&self, key: DBKey) -> Result<Option<Value>> {
+    fn get(&self, key: DBKey) -> PmtreeResult<Option<Value>> {
         Ok(self.0.get(&key).cloned())
     }
 
-    fn put(&mut self, key: DBKey, value: Value) -> Result<()> {
+    fn put(&mut self, key: DBKey, value: Value) -> PmtreeResult<()> {
         self.0.insert(key, value);
 
         Ok(())
     }
 
-    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()> {
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> PmtreeResult<()> {
         self.0.extend(subtree.into_iter());
 
         Ok(())

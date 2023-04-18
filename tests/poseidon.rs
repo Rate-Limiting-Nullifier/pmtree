@@ -49,25 +49,25 @@ struct MemoryDBConfig;
 impl Database for MemoryDB {
     type Config = MemoryDBConfig;
 
-    fn new(_db_config: MemoryDBConfig) -> Result<Self> {
+    fn new(_db_config: MemoryDBConfig) -> PmtreeResult<Self> {
         Ok(MemoryDB(HashMap::new()))
     }
 
-    fn load(_db_config: MemoryDBConfig) -> Result<Self> {
-        Err(Box::new(Error("Cannot load in-memory DB".to_string())))
+    fn load(_db_config: MemoryDBConfig) -> PmtreeResult<Self> {
+        Err(DatabaseError(DatabaseErrorKind::CannotLoadDatabase))
     }
 
-    fn get(&self, key: DBKey) -> Result<Option<Value>> {
+    fn get(&self, key: DBKey) -> PmtreeResult<Option<Value>> {
         Ok(self.0.get(&key).cloned())
     }
 
-    fn put(&mut self, key: DBKey, value: Value) -> Result<()> {
+    fn put(&mut self, key: DBKey, value: Value) -> PmtreeResult<()> {
         self.0.insert(key, value);
 
         Ok(())
     }
 
-    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()> {
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> PmtreeResult<()> {
         self.0.extend(subtree.into_iter());
 
         Ok(())
@@ -82,33 +82,31 @@ struct SledConfig {
 impl Database for MySled {
     type Config = SledConfig;
 
-    fn new(db_config: SledConfig) -> Result<Self> {
+    fn new(db_config: SledConfig) -> PmtreeResult<Self> {
         let db = sled::open(db_config.path).unwrap();
         if db.was_recovered() {
-            return Err(Box::new(Error("Database exists, try load()!".to_string())));
+            return Err(DatabaseError(DatabaseErrorKind::DatabaseExists));
         }
 
         Ok(MySled(db))
     }
 
-    fn load(db_config: SledConfig) -> Result<Self> {
+    fn load(db_config: SledConfig) -> PmtreeResult<Self> {
         let db = sled::open(&db_config.path).unwrap();
 
         if !db.was_recovered() {
             fs::remove_dir_all(&db_config.path).expect("Error removing db");
-            return Err(Box::new(Error(
-                "Trying to load non-existing database!".to_string(),
-            )));
+            return Err(DatabaseError(DatabaseErrorKind::CannotLoadDatabase));
         }
 
         Ok(MySled(db))
     }
 
-    fn get(&self, key: DBKey) -> Result<Option<Value>> {
+    fn get(&self, key: DBKey) -> PmtreeResult<Option<Value>> {
         Ok(self.0.get(key).unwrap().map(|val| val.to_vec()))
     }
 
-    fn put(&mut self, key: DBKey, value: Value) -> Result<()> {
+    fn put(&mut self, key: DBKey, value: Value) -> PmtreeResult<()> {
         self.0.insert(key, value).unwrap();
 
         self.0.flush().unwrap();
@@ -116,7 +114,7 @@ impl Database for MySled {
         Ok(())
     }
 
-    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()> {
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> PmtreeResult<()> {
         let mut batch = sled::Batch::default();
 
         for (key, value) in subtree {
@@ -130,7 +128,7 @@ impl Database for MySled {
 }
 
 #[test]
-fn poseidon_memory() -> Result<()> {
+fn poseidon_memory() -> PmtreeResult<()> {
     let mut mt = MerkleTree::<MemoryDB, PoseidonHash>::new(TEST_TREE_HEIGHT, MemoryDBConfig)?;
 
     let leaf_index = 3;
@@ -254,7 +252,7 @@ fn poseidon_memory() -> Result<()> {
 }
 
 #[test]
-fn poseidon_sled() -> Result<()> {
+fn poseidon_sled() -> PmtreeResult<()> {
     let mut mt = MerkleTree::<MySled, PoseidonHash>::new(
         TEST_TREE_HEIGHT,
         SledConfig {
