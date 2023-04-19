@@ -44,12 +44,12 @@ where
     H: Hasher,
 {
     /// Creates tree with specified depth and default "pmtree_db" dbpath.
-    pub fn default(depth: usize) -> Result<Self> {
+    pub fn default(depth: usize) -> PmtreeResult<Self> {
         Self::new(depth, D::Config::default())
     }
 
     /// Creates new `MerkleTree` and store it to the specified path/db
-    pub fn new(depth: usize, db_config: D::Config) -> Result<Self> {
+    pub fn new(depth: usize, db_config: D::Config) -> PmtreeResult<Self> {
         // Create new db instance
         let mut db = D::new(db_config)?;
 
@@ -85,7 +85,7 @@ where
     }
 
     /// Loads existing Merkle Tree from the specified path/db
-    pub fn load(db_config: D::Config) -> Result<Self> {
+    pub fn load(db_config: D::Config) -> PmtreeResult<Self> {
         // Load existing db instance
         let db = D::load(db_config)?;
 
@@ -116,9 +116,9 @@ where
     }
 
     /// Sets a leaf at the specified tree index
-    pub fn set(&mut self, key: usize, leaf: H::Fr) -> Result<()> {
+    pub fn set(&mut self, key: usize, leaf: H::Fr) -> PmtreeResult<()> {
         if key >= self.capacity() {
-            return Err(Box::new(Error("Merkle Tree is full!".to_string())));
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::IndexOutOfBounds));
         }
 
         self.db
@@ -136,7 +136,7 @@ where
     }
 
     // Recalculates `Merkle Tree` from the specified key
-    fn recalculate_from(&mut self, key: usize) -> Result<()> {
+    fn recalculate_from(&mut self, key: usize) -> PmtreeResult<()> {
         let mut depth = self.depth;
         let mut i = key;
 
@@ -156,7 +156,7 @@ where
     }
 
     // Hashes the correct couple for the key
-    fn hash_couple(&self, depth: usize, key: usize) -> Result<H::Fr> {
+    fn hash_couple(&self, depth: usize, key: usize) -> PmtreeResult<H::Fr> {
         let b = key & !1;
         Ok(H::hash(&[
             self.get_elem(Key(depth, b))?,
@@ -165,7 +165,7 @@ where
     }
 
     // Returns elem by the key
-    fn get_elem(&self, key: Key) -> Result<H::Fr> {
+    fn get_elem(&self, key: Key) -> PmtreeResult<H::Fr> {
         let res = self
             .db
             .get(key.into())?
@@ -175,9 +175,9 @@ where
     }
 
     /// Deletes a leaf at the `key` by setting it to its default value
-    pub fn delete(&mut self, key: usize) -> Result<()> {
+    pub fn delete(&mut self, key: usize) -> PmtreeResult<()> {
         if key >= self.next_index {
-            return Err(Box::new(Error("The key doesn't exist!".to_string())));
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::InvalidKey));
         }
 
         self.set(key, H::default_leaf())?;
@@ -186,20 +186,18 @@ where
     }
 
     /// Inserts a leaf to the next available index
-    pub fn update_next(&mut self, leaf: H::Fr) -> Result<()> {
+    pub fn update_next(&mut self, leaf: H::Fr) -> PmtreeResult<()> {
         self.set(self.next_index, leaf)?;
 
         Ok(())
     }
 
     /// Batch insertion, updates the tree in parallel.
-    pub fn batch_insert(&mut self, leaves: &[H::Fr]) -> Result<()> {
+    pub fn batch_insert(&mut self, leaves: &[H::Fr]) -> PmtreeResult<()> {
         let end = self.next_index + leaves.len();
 
         if end > self.capacity() {
-            return Err(Box::new(Error(
-                "Not enough space to insert the leaves!".to_string(),
-            )));
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::MerkleTreeIsFull));
         }
 
         let mut subtree = HashMap::<Key, H::Fr>::new();
@@ -253,7 +251,7 @@ where
         subtree: &mut HashMap<Key, H::Fr>,
         leaves: &[H::Fr],
         from: usize,
-    ) -> Result<()> {
+    ) -> PmtreeResult<()> {
         if key.0 == self.depth {
             if key.1 >= from {
                 subtree.insert(key, leaves[key.1 - from]);
@@ -309,9 +307,9 @@ where
     }
 
     /// Computes a Merkle proof for the leaf at the specified index
-    pub fn proof(&self, index: usize) -> Result<MerkleProof<H>> {
+    pub fn proof(&self, index: usize) -> PmtreeResult<MerkleProof<H>> {
         if index >= self.capacity() {
-            return Err(Box::new(Error("Index exceeds set size!".to_string())));
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::IndexOutOfBounds));
         }
 
         let mut witness = Vec::with_capacity(self.depth);

@@ -20,17 +20,37 @@ pub type DBKey = [u8; 8];
 /// Denotes values in a database
 pub type Value = Vec<u8>;
 
-/// Denotes `Error` type, for handling DB interaction errors
 #[derive(Debug)]
-pub struct Error(pub String);
+pub enum TreeErrorKind {
+    MerkleTreeIsFull,
+    InvalidKey,
+    IndexOutOfBounds,
+}
 
-impl std::fmt::Display for Error {
+#[derive(Debug)]
+pub enum DatabaseErrorKind {
+    CannotLoadDatabase,
+    DatabaseExists,
+}
+
+#[derive(Debug)]
+pub enum PmtreeErrorKind {
+    /// Error in database
+    DatabaseError(DatabaseErrorKind),
+    /// Error in tree
+    TreeError(TreeErrorKind),
+}
+
+impl std::fmt::Display for PmtreeErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        match self {
+            PmtreeErrorKind::DatabaseError(e) => write!(f, "Database error: {e:?}"),
+            PmtreeErrorKind::TreeError(e) => write!(f, "Tree error: {e:?}"),
+        }
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for PmtreeErrorKind {}
 
 /// Custom `Result` type with custom `Error` type
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+pub type PmtreeResult<T> = std::result::Result<T, PmtreeErrorKind>;

@@ -15,33 +15,35 @@ struct SledConfig {
 impl Database for MySled {
     type Config = SledConfig;
 
-    fn new(db_config: SledConfig) -> Result<Self> {
+    fn new(db_config: SledConfig) -> PmtreeResult<Self> {
         let db = sled::open(db_config.path).unwrap();
         if db.was_recovered() {
-            return Err(Box::new(Error("Database exists, try load()!".to_string())));
+            return Err(PmtreeErrorKind::DatabaseError(
+                DatabaseErrorKind::DatabaseExists,
+            ));
         }
 
         Ok(MySled(db))
     }
 
-    fn load(db_config: SledConfig) -> Result<Self> {
+    fn load(db_config: SledConfig) -> PmtreeResult<Self> {
         let db = sled::open(&db_config.path).unwrap();
 
         if !db.was_recovered() {
             fs::remove_dir_all(&db_config.path).expect("Error removing db");
-            return Err(Box::new(Error(
-                "Trying to load non-existing database!".to_string(),
-            )));
+            return Err(PmtreeErrorKind::DatabaseError(
+                DatabaseErrorKind::CannotLoadDatabase,
+            ));
         }
 
         Ok(MySled(db))
     }
 
-    fn get(&self, key: DBKey) -> Result<Option<Value>> {
+    fn get(&self, key: DBKey) -> PmtreeResult<Option<Value>> {
         Ok(self.0.get(key).unwrap().map(|val| val.to_vec()))
     }
 
-    fn put(&mut self, key: DBKey, value: Value) -> Result<()> {
+    fn put(&mut self, key: DBKey, value: Value) -> PmtreeResult<()> {
         self.0.insert(key, value).unwrap();
 
         self.0.flush().unwrap();
@@ -49,7 +51,7 @@ impl Database for MySled {
         Ok(())
     }
 
-    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()> {
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> PmtreeResult<()> {
         let mut batch = sled::Batch::default();
 
         for (key, value) in subtree {
@@ -89,7 +91,7 @@ impl Hasher for MyKeccak {
 }
 
 #[test]
-fn insert_delete() -> Result<()> {
+fn insert_delete() -> PmtreeResult<()> {
     let mut mt = MerkleTree::<MySled, MyKeccak>::new(
         2,
         SledConfig {
@@ -142,7 +144,7 @@ fn insert_delete() -> Result<()> {
 }
 
 #[test]
-fn batch_insertions() -> Result<()> {
+fn batch_insertions() -> PmtreeResult<()> {
     let mut mt = MerkleTree::<MySled, MyKeccak>::new(
         2,
         SledConfig {
