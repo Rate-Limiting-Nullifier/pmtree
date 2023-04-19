@@ -10,6 +10,8 @@ pub mod database;
 pub mod hasher;
 pub mod tree;
 
+use std::fmt::{Debug, Display};
+
 pub use database::*;
 pub use hasher::*;
 pub use tree::MerkleTree;
@@ -25,12 +27,14 @@ pub enum TreeErrorKind {
     MerkleTreeIsFull,
     InvalidKey,
     IndexOutOfBounds,
+    UnknownError(String),
 }
 
 #[derive(Debug)]
 pub enum DatabaseErrorKind {
     CannotLoadDatabase,
     DatabaseExists,
+    UnknownError(String),
 }
 
 #[derive(Debug)]
@@ -39,13 +43,16 @@ pub enum PmtreeErrorKind {
     DatabaseError(DatabaseErrorKind),
     /// Error in tree
     TreeError(TreeErrorKind),
+    /// Unknown error
+    UnknownError(String),
 }
 
-impl std::fmt::Display for PmtreeErrorKind {
+impl Display for PmtreeErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             PmtreeErrorKind::DatabaseError(e) => write!(f, "Database error: {e:?}"),
             PmtreeErrorKind::TreeError(e) => write!(f, "Tree error: {e:?}"),
+            PmtreeErrorKind::UnknownError(e) => write!(f, "Unknown error: {e:?}"),
         }
     }
 }
