@@ -239,7 +239,7 @@ where
         Ok(())
     }
 
-    pub fn set_range(&mut self, start: usize, leaves: &[H::Fr]) -> Result<()> {
+    pub fn set_range(&mut self, start: usize, leaves: &[H::Fr]) -> PmtreeResult<()> {
         self.batch_insert(Some(start), leaves)
     }
 

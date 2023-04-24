@@ -172,7 +172,7 @@ fn batch_insertions() -> PmtreeResult<()> {
 }
 
 #[test]
-fn set_range() -> Result<()> {
+fn set_range() -> PmtreeResult<()> {
     let mut mt = MerkleTree::<MySled, MyKeccak>::new(
         2,
         SledConfig {
