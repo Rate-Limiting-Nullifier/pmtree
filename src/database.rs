@@ -8,21 +8,21 @@ pub trait Database {
     type Config: Default;
 
     /// Creates new instance of db
-    fn new(config: Self::Config) -> Result<Self>
+    fn new(config: Self::Config) -> PmtreeResult<Self>
     where
         Self: Sized;
 
     /// Loades existing db (existence check required)
-    fn load(config: Self::Config) -> Result<Self>
+    fn load(config: Self::Config) -> PmtreeResult<Self>
     where
         Self: Sized;
 
     /// Returns value from db by the key
-    fn get(&self, key: DBKey) -> Result<Option<Value>>;
+    fn get(&self, key: DBKey) -> PmtreeResult<Option<Value>>;
 
     /// Puts the value to the db by the key
-    fn put(&mut self, key: DBKey, value: Value) -> Result<()>;
+    fn put(&mut self, key: DBKey, value: Value) -> PmtreeResult<()>;
 
     /// Batc
-    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> Result<()>;
+    fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> PmtreeResult<()>;
 }
