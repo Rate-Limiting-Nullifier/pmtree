@@ -157,7 +157,7 @@ fn batch_insertions() -> Result<()> {
         hex!("0000000000000000000000000000000000000000000000000000000000000004"),
     ];
 
-    mt.batch_insert(&leaves)?;
+    mt.batch_insert(None, &leaves)?;
 
     assert_eq!(
         mt.root(),
@@ -165,6 +165,32 @@ fn batch_insertions() -> Result<()> {
     );
 
     fs::remove_dir_all("abacabasa").expect("Error removing db");
+
+    Ok(())
+}
+
+#[test]
+fn set_range() -> Result<()> {
+    let mut mt = MerkleTree::<MySled, MyKeccak>::new(
+        2,
+        SledConfig {
+            path: String::from("abacabasab"),
+        },
+    )?;
+
+    let leaves = [
+        hex!("0000000000000000000000000000000000000000000000000000000000000001"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000002"),
+    ];
+
+    mt.set_range(2, &leaves)?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("1e9f6c8d3fd5b7ae3a29792adb094c6d4cc6149d0c81c8c8e57cf06c161a92b8")
+    );
+
+    fs::remove_dir_all("abacabasab").expect("Error removing db");
 
     Ok(())
 }

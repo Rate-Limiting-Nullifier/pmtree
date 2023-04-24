@@ -193,8 +193,9 @@ where
     }
 
     /// Batch insertion, updates the tree in parallel.
-    pub fn batch_insert(&mut self, leaves: &[H::Fr]) -> Result<()> {
-        let end = self.next_index + leaves.len();
+    pub fn batch_insert(&mut self, start: Option<usize>, leaves: &[H::Fr]) -> Result<()> {
+        let start = start.unwrap_or(self.next_index);
+        let end = start + leaves.len();
 
         if end > self.capacity() {
             return Err(Box::new(Error(
@@ -207,14 +208,7 @@ where
         let root_key = Key(0, 0);
 
         subtree.insert(root_key, self.root);
-        self.fill_nodes(
-            root_key,
-            self.next_index,
-            end,
-            &mut subtree,
-            leaves,
-            self.next_index,
-        )?;
+        self.fill_nodes(root_key, start, end, &mut subtree, leaves, start)?;
 
         let subtree = Arc::new(RwLock::new(subtree));
 
@@ -233,15 +227,22 @@ where
                 .collect(),
         )?;
 
-        // Update root value and next_index in memory
-        self.root = root_val;
-        self.next_index = end;
-
         // Update next_index value in db
-        self.db
-            .put(NEXT_INDEX_KEY, self.next_index.to_be_bytes().to_vec())?;
+
+        if start + leaves.len() > self.next_index {
+            self.next_index = start + leaves.len();
+            self.db
+                .put(NEXT_INDEX_KEY, self.next_index.to_be_bytes().to_vec())?;
+        }
+
+        // Update root value in memory
+        self.root = root_val;
 
         Ok(())
+    }
+
+    pub fn set_range(&mut self, start: usize, leaves: &[H::Fr]) -> Result<()> {
+        self.batch_insert(Some(start), leaves)
     }
 
     // Fills hashmap subtree

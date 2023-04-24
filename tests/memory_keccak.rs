@@ -120,11 +120,30 @@ fn batch_insertions() -> Result<()> {
         hex!("0000000000000000000000000000000000000000000000000000000000000004"),
     ];
 
-    mt.batch_insert(&leaves)?;
+    mt.batch_insert(None, &leaves)?;
 
     assert_eq!(
         mt.root(),
         hex!("a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36")
+    );
+
+    Ok(())
+}
+
+#[test]
+fn set_range() -> Result<()> {
+    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, MemoryDBConfig)?;
+
+    let leaves = [
+        hex!("0000000000000000000000000000000000000000000000000000000000000001"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000002"),
+    ];
+
+    mt.set_range(2, &leaves)?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("1e9f6c8d3fd5b7ae3a29792adb094c6d4cc6149d0c81c8c8e57cf06c161a92b8")
     );
 
     Ok(())
