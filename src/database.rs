@@ -23,6 +23,6 @@ pub trait Database {
     /// Puts the value to the db by the key
     fn put(&mut self, key: DBKey, value: Value) -> PmtreeResult<()>;
 
-    /// Batc
+    /// Puts the leaves batch to the db
     fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> PmtreeResult<()>;
 }
