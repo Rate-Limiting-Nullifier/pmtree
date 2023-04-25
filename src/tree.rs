@@ -192,6 +192,18 @@ where
         Ok(())
     }
 
+    /// Batch insertion from starting index
+    pub fn set_range<I: IntoIterator<Item = H::Fr>>(
+        &mut self,
+        start: usize,
+        leaves: I,
+    ) -> PmtreeResult<()> {
+        self.batch_insert(
+            Some(start),
+            leaves.into_iter().collect::<Vec<_>>().as_slice(),
+        )
+    }
+
     /// Batch insertion, updates the tree in parallel.
     pub fn batch_insert(&mut self, start: Option<usize>, leaves: &[H::Fr]) -> PmtreeResult<()> {
         let start = start.unwrap_or(self.next_index);
@@ -226,7 +238,6 @@ where
         )?;
 
         // Update next_index value in db
-
         if start + leaves.len() > self.next_index {
             self.next_index = start + leaves.len();
             self.db
@@ -237,17 +248,6 @@ where
         self.root = root_val;
 
         Ok(())
-    }
-
-    pub fn set_range<I: IntoIterator<Item = H::Fr>>(
-        &mut self,
-        start: usize,
-        leaves: I,
-    ) -> PmtreeResult<()> {
-        self.batch_insert(
-            Some(start),
-            leaves.into_iter().collect::<Vec<_>>().as_slice(),
-        )
     }
 
     // Fills hashmap subtree
