@@ -27,14 +27,14 @@ pub enum TreeErrorKind {
     MerkleTreeIsFull,
     InvalidKey,
     IndexOutOfBounds,
-    UnknownError(String),
+    CustomError(String),
 }
 
 #[derive(Debug)]
 pub enum DatabaseErrorKind {
     CannotLoadDatabase,
     DatabaseExists,
-    UnknownError(String),
+    CustomError(String),
 }
 
 #[derive(Debug)]
@@ -43,8 +43,8 @@ pub enum PmtreeErrorKind {
     DatabaseError(DatabaseErrorKind),
     /// Error in tree
     TreeError(TreeErrorKind),
-    /// Unknown error
-    UnknownError(String),
+    /// Custom error
+    CustomError(String),
 }
 
 impl Display for PmtreeErrorKind {
@@ -52,7 +52,7 @@ impl Display for PmtreeErrorKind {
         match self {
             PmtreeErrorKind::DatabaseError(e) => write!(f, "Database error: {e:?}"),
             PmtreeErrorKind::TreeError(e) => write!(f, "Tree error: {e:?}"),
-            PmtreeErrorKind::UnknownError(e) => write!(f, "Unknown error: {e:?}"),
+            PmtreeErrorKind::CustomError(e) => write!(f, "Custom error: {e:?}"),
         }
     }
 }
