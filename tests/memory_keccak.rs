@@ -141,7 +141,7 @@ fn set_range() -> PmtreeResult<()> {
         hex!("0000000000000000000000000000000000000000000000000000000000000002"),
     ];
 
-    mt.set_range(2, &leaves)?;
+    mt.set_range(2, leaves)?;
 
     assert_eq!(
         mt.root(),

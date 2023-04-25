@@ -239,8 +239,15 @@ where
         Ok(())
     }
 
-    pub fn set_range(&mut self, start: usize, leaves: &[H::Fr]) -> PmtreeResult<()> {
-        self.batch_insert(Some(start), leaves)
+    pub fn set_range<I: IntoIterator<Item = H::Fr>>(
+        &mut self,
+        start: usize,
+        leaves: I,
+    ) -> PmtreeResult<()> {
+        self.batch_insert(
+            Some(start),
+            leaves.into_iter().collect::<Vec<_>>().as_slice(),
+        )
     }
 
     // Fills hashmap subtree
