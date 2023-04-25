@@ -238,8 +238,8 @@ where
         )?;
 
         // Update next_index value in db
-        if start + leaves.len() > self.next_index {
-            self.next_index = start + leaves.len();
+        if end > self.next_index {
+            self.next_index = end;
             self.db
                 .put(NEXT_INDEX_KEY, self.next_index.to_be_bytes().to_vec())?;
         }
