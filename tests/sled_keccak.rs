@@ -196,3 +196,48 @@ fn set_range() -> PmtreeResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn batch_operations() -> PmtreeResult<()> {
+    let mut mt = MerkleTree::<MySled, MyKeccak>::new(
+        2,
+        SledConfig {
+            path: String::from("batch_operations"),
+        },
+    )?;
+
+    let leaves = [
+        hex!("0000000000000000000000000000000000000000000000000000000000000001"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000002"),
+    ];
+
+    mt.batch_insert(None, &leaves)?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("893760ec5b5bee236f29e85aef64f17139c3c1b7ff24ce64eb6315fca0f2485b")
+    );
+
+    let leaves = [
+        hex!("0000000000000000000000000000000000000000000000000000000000000003"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000004"),
+    ];
+
+    mt.batch_operations(leaves, [])?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36")
+    );
+
+    mt.batch_operations([], [0, 1, 2, 3])?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("b4c11951957c6f8f642c4af61cd6b24640fec6dc7fc607ee8206a99e92410d30")
+    );
+
+    fs::remove_dir_all("batch_operations").expect("Error removing db");
+
+    Ok(())
+}
