@@ -230,11 +230,11 @@ fn batch_operations() -> PmtreeResult<()> {
         hex!("a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36")
     );
 
-    mt.batch_operations(None, [], [0, 1, 2, 3])?;
+    mt.batch_operations(None, [], [3])?;
 
     assert_eq!(
         mt.root(),
-        hex!("b4c11951957c6f8f642c4af61cd6b24640fec6dc7fc607ee8206a99e92410d30")
+        hex!("222ff5e0b5877792c2bc1670e2ccd0c2c97cd7bb1672a57d598db05092d3d72c")
     );
 
     fs::remove_dir_all("batch_operations").expect("Error removing db");

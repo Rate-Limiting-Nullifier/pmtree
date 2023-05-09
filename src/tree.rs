@@ -1,7 +1,7 @@
 use crate::*;
 
 use std::cmp::{max, min};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, RwLock};
 
 // db[DEPTH_KEY] = depth
@@ -216,14 +216,29 @@ where
         leaves: I,
         to_remove_indices: J,
     ) -> PmtreeResult<()> {
-        let leaves = leaves.into_iter().collect::<Vec<_>>();
-        let to_remove_indices = to_remove_indices.into_iter().collect::<Vec<_>>();
+        // this fn should first remove the elements at the given indices, then insert the new leaves
+        // this is done in parallel, and then the tree is recalculated from the first index
+        // operation must be atomic, so if one of the operations fails, the tree is not updated
+
+        let leaves: Vec<H::Fr> = leaves.into_iter().collect();
+        let to_remove_indices: Vec<usize> = to_remove_indices.into_iter().collect();
 
         let start = start.unwrap_or(self.next_index);
         let end = start + leaves.len();
 
-        if end - to_remove_indices.len() > self.capacity() {
-            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::MerkleTreeIsFull));
+        // check if the leaves are in the correct range
+        if leaves.len() + start > self.capacity() {
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::IndexOutOfBounds));
+        }
+
+        // check if the indices are in the correct range
+        if to_remove_indices.iter().any(|&i| i >= self.next_index) {
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::IndexOutOfBounds));
+        }
+
+        // check if the indices are unique
+        if to_remove_indices.len() != to_remove_indices.iter().collect::<HashSet<_>>().len() {
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::CustomError("Indices are not unique".to_string())));
         }
 
         let mut subtree = HashMap::<Key, H::Fr>::new();
@@ -232,11 +247,12 @@ where
 
         subtree.insert(root_key, self.root);
         
-        for i in to_remove_indices {
-            subtree.insert(Key(self.depth, i), H::default_leaf());
-        }
         self.fill_nodes(root_key, start, end, &mut subtree, &leaves, start)?;
-        
+        for i in to_remove_indices {
+            subtree.insert(Key(self.depth, i - leaves.len()), H::default_leaf());
+        }
+
+
         let subtree = Arc::new(RwLock::new(subtree));
 
         let root_val = rayon::ThreadPoolBuilder::new()
@@ -261,7 +277,6 @@ where
                 .put(NEXT_INDEX_KEY, self.next_index.to_be_bytes().to_vec())?;
         }
 
-        // Update root value in memory
         self.root = root_val;
 
         Ok(())
