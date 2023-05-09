@@ -251,7 +251,7 @@ where
 
         self.fill_nodes(root_key, start, end, &mut subtree, &leaves, start)?;
         for i in to_remove_indices {
-            subtree.insert(Key(self.depth, i - leaves.len() + 1), H::default_leaf());
+            subtree.insert(Key(self.depth, i + leaves.len()), H::default_leaf());
         }
 
         let subtree = Arc::new(RwLock::new(subtree));

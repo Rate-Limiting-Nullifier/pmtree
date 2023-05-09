@@ -151,11 +151,9 @@ fn set_range() -> PmtreeResult<()> {
     Ok(())
 }
 
-
 #[test]
 fn batch_operations() -> PmtreeResult<()> {
     let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, MemoryDBConfig)?;
-
 
     let leaves = [
         hex!("0000000000000000000000000000000000000000000000000000000000000001"),
@@ -186,9 +184,16 @@ fn batch_operations() -> PmtreeResult<()> {
 
     assert_eq!(
         mt.root(),
-        hex!("222ff5e0b5877792c2bc1670e2ccd0c2c97cd7bb1672a57d598db05092d3d72c")
+        hex!("a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36")
     );
 
+    // this should remove the last element
+    mt.batch_operations(None, [], [3])?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("222ff5e0b5877792c2bc1670e2ccd0c2c97cd7bb1672a57d598db05092d3d72c")
+    );
 
     Ok(())
 }
