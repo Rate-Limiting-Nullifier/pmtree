@@ -150,3 +150,45 @@ fn set_range() -> PmtreeResult<()> {
 
     Ok(())
 }
+
+
+#[test]
+fn batch_operations() -> PmtreeResult<()> {
+    let mut mt = MerkleTree::<MemoryDB, MyKeccak>::new(2, MemoryDBConfig)?;
+
+
+    let leaves = [
+        hex!("0000000000000000000000000000000000000000000000000000000000000001"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000002"),
+    ];
+
+    mt.batch_insert(None, leaves)?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("893760ec5b5bee236f29e85aef64f17139c3c1b7ff24ce64eb6315fca0f2485b")
+    );
+
+    let leaves = [
+        hex!("0000000000000000000000000000000000000000000000000000000000000003"),
+        hex!("0000000000000000000000000000000000000000000000000000000000000004"),
+    ];
+
+    mt.batch_operations(None, leaves, [])?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36")
+    );
+
+    // this should be a no-op
+    mt.batch_operations(None, [leaves[1]], [3])?;
+
+    assert_eq!(
+        mt.root(),
+        hex!("222ff5e0b5877792c2bc1670e2ccd0c2c97cd7bb1672a57d598db05092d3d72c")
+    );
+
+
+    Ok(())
+}

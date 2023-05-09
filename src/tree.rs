@@ -227,7 +227,7 @@ where
         let end = start + leaves.len();
 
         // check if the leaves are in the correct range
-        if leaves.len() + start > self.capacity() {
+        if leaves.len() + start - to_remove_indices.len() > self.capacity() {
             return Err(PmtreeErrorKind::TreeError(TreeErrorKind::IndexOutOfBounds));
         }
 
@@ -238,7 +238,9 @@ where
 
         // check if the indices are unique
         if to_remove_indices.len() != to_remove_indices.iter().collect::<HashSet<_>>().len() {
-            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::CustomError("Indices are not unique".to_string())));
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::CustomError(
+                "Indices are not unique".to_string(),
+            )));
         }
 
         let mut subtree = HashMap::<Key, H::Fr>::new();
@@ -246,12 +248,11 @@ where
         let root_key = Key(0, 0);
 
         subtree.insert(root_key, self.root);
-        
+
         self.fill_nodes(root_key, start, end, &mut subtree, &leaves, start)?;
         for i in to_remove_indices {
-            subtree.insert(Key(self.depth, i - leaves.len()), H::default_leaf());
+            subtree.insert(Key(self.depth, i - leaves.len() + 1), H::default_leaf());
         }
-
 
         let subtree = Arc::new(RwLock::new(subtree));
 

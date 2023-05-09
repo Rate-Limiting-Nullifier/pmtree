@@ -230,7 +230,8 @@ fn batch_operations() -> PmtreeResult<()> {
         hex!("a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36")
     );
 
-    mt.batch_operations(None, [], [3])?;
+    // this should be a no-op
+    mt.batch_operations(None, [leaves[1]], [3])?;
 
     assert_eq!(
         mt.root(),
