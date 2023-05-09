@@ -198,56 +198,16 @@ where
         start: usize,
         leaves: I,
     ) -> PmtreeResult<()> {
-        self.batch_insert(
-            Some(start),
-            leaves.into_iter().collect::<Vec<_>>().as_slice(),
-        )
+        self.batch_insert(Some(start), leaves)
     }
 
     /// Batch insertion, updates the tree in parallel.
-    pub fn batch_insert(&mut self, start: Option<usize>, leaves: &[H::Fr]) -> PmtreeResult<()> {
-        let start = start.unwrap_or(self.next_index);
-        let end = start + leaves.len();
-
-        if end > self.capacity() {
-            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::MerkleTreeIsFull));
-        }
-
-        let mut subtree = HashMap::<Key, H::Fr>::new();
-
-        let root_key = Key(0, 0);
-
-        subtree.insert(root_key, self.root);
-        self.fill_nodes(root_key, start, end, &mut subtree, leaves, start)?;
-
-        let subtree = Arc::new(RwLock::new(subtree));
-
-        let root_val = rayon::ThreadPoolBuilder::new()
-            .num_threads(rayon::current_num_threads())
-            .build()
-            .unwrap()
-            .install(|| Self::batch_recalculate(root_key, Arc::clone(&subtree), self.depth));
-
-        let subtree = RwLock::into_inner(Arc::try_unwrap(subtree).unwrap()).unwrap();
-
-        self.db.put_batch(
-            subtree
-                .into_iter()
-                .map(|(key, value)| (key.into(), H::serialize(value)))
-                .collect(),
-        )?;
-
-        // Update next_index value in db
-        if end > self.next_index {
-            self.next_index = end;
-            self.db
-                .put(NEXT_INDEX_KEY, self.next_index.to_be_bytes().to_vec())?;
-        }
-
-        // Update root value in memory
-        self.root = root_val;
-
-        Ok(())
+    pub fn batch_insert<I: IntoIterator<Item = H::Fr>>(
+        &mut self,
+        start: Option<usize>,
+        leaves: I,
+    ) -> PmtreeResult<()> {
+        self.batch_operations(start, leaves, [])
     }
 
     pub fn batch_operations<I: IntoIterator<Item = H::Fr>, J: IntoIterator<Item = usize>>(
