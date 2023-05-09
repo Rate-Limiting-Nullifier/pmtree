@@ -122,7 +122,7 @@ fn batch_insertions() -> PmtreeResult<()> {
         hex!("0000000000000000000000000000000000000000000000000000000000000004"),
     ];
 
-    mt.batch_insert(None, &leaves)?;
+    mt.batch_insert(None, leaves)?;
 
     assert_eq!(
         mt.root(),
