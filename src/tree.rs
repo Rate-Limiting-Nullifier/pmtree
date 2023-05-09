@@ -231,12 +231,12 @@ where
         let root_key = Key(0, 0);
 
         subtree.insert(root_key, self.root);
-        self.fill_nodes(root_key, start, end, &mut subtree, &leaves, start)?;
-
+        
         for i in to_remove_indices {
             subtree.insert(Key(self.depth, i), H::default_leaf());
         }
-
+        self.fill_nodes(root_key, start, end, &mut subtree, &leaves, start)?;
+        
         let subtree = Arc::new(RwLock::new(subtree));
 
         let root_val = rayon::ThreadPoolBuilder::new()
