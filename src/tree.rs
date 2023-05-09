@@ -252,13 +252,14 @@ where
 
     pub fn batch_operations<I: IntoIterator<Item = H::Fr>, J: IntoIterator<Item = usize>>(
         &mut self,
+        start: Option<usize>,
         leaves: I,
         to_remove_indices: J,
     ) -> PmtreeResult<()> {
         let leaves = leaves.into_iter().collect::<Vec<_>>();
         let to_remove_indices = to_remove_indices.into_iter().collect::<Vec<_>>();
 
-        let start = self.next_index;
+        let start = start.unwrap_or(self.next_index);
         let end = start + leaves.len();
 
         if end - to_remove_indices.len() > self.capacity() {

@@ -223,14 +223,14 @@ fn batch_operations() -> PmtreeResult<()> {
         hex!("0000000000000000000000000000000000000000000000000000000000000004"),
     ];
 
-    mt.batch_operations(leaves, [])?;
+    mt.batch_operations(None, leaves, [])?;
 
     assert_eq!(
         mt.root(),
         hex!("a9bb8c3f1f12e9aa903a50c47f314b57610a3ab32f2d463293f58836def38d36")
     );
 
-    mt.batch_operations([], [0, 1, 2, 3])?;
+    mt.batch_operations(None, [], [0, 1, 2, 3])?;
 
     assert_eq!(
         mt.root(),
