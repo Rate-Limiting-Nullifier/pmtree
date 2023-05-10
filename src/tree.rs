@@ -136,7 +136,7 @@ where
     }
 
     // Recalculates `Merkle Tree` from the specified key
-    pub fn recalculate_from(&mut self, key: usize) -> PmtreeResult<()> {
+    fn recalculate_from(&mut self, key: usize) -> PmtreeResult<()> {
         let mut depth = self.depth;
         let mut i = key;
 
@@ -172,15 +172,6 @@ where
             .map_or(self.cache[key.0], |value| H::deserialize(value));
 
         Ok(res)
-    }
-
-    // Returns the leaf by the key
-    pub fn get(&self, key: usize) -> PmtreeResult<H::Fr> {
-        if key >= self.capacity() {
-            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::IndexOutOfBounds));
-        }
-
-        self.get_elem(Key(self.depth, key))
     }
 
     /// Deletes a leaf at the `key` by setting it to its default value
@@ -351,6 +342,15 @@ where
         let expected_root = witness.compute_root_from(leaf);
 
         self.root() == expected_root
+    }
+
+    // Returns the leaf by the key
+    pub fn get(&self, key: usize) -> PmtreeResult<H::Fr> {
+        if key >= self.capacity() {
+            return Err(PmtreeErrorKind::TreeError(TreeErrorKind::IndexOutOfBounds));
+        }
+
+        self.get_elem(Key(self.depth, key))
     }
 
     /// Returns the root of the tree
