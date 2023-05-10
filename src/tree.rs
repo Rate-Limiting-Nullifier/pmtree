@@ -344,7 +344,7 @@ where
         self.root() == expected_root
     }
 
-    // Returns the leaf by the key
+    /// Returns the leaf by the key
     pub fn get(&self, key: usize) -> PmtreeResult<H::Fr> {
         if key >= self.capacity() {
             return Err(PmtreeErrorKind::TreeError(TreeErrorKind::IndexOutOfBounds));
