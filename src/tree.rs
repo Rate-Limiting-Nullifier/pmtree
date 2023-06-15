@@ -27,7 +27,7 @@ where
     D: Database,
     H: Hasher,
 {
-    db: D,
+    pub db: D,
     depth: usize,
     next_index: usize,
     cache: Vec<H::Fr>,
