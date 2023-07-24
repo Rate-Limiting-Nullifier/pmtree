@@ -115,6 +115,11 @@ where
         })
     }
 
+    /// Closes the db connection
+    pub fn close(&mut self) -> PmtreeResult<()> {
+        self.db.close()
+    }
+
     /// Sets a leaf at the specified tree index
     pub fn set(&mut self, key: usize, leaf: H::Fr) -> PmtreeResult<()> {
         if key >= self.capacity() {
