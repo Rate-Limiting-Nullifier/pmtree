@@ -1,5 +1,5 @@
 use hex_literal::hex;
-use pmtree::*;
+use vacp2p_pmtree::*;
 use std::collections::HashMap;
 use tiny_keccak::{Hasher as _, Keccak};
 

@@ -1,14 +1,15 @@
 [package]
-name = "pmtree"
+name = "vacp2p_pmtree"
 version = "1.0.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Persistent Merkle Tree in Rust"
 
 [dev-dependencies]
-hex-literal = "0.3.4"
-tiny-keccak = { version = "2.0.2", features = ["keccak"] }
-sled = "0.34.7"
-rln = { git = "https://github.com/vacp2p/zerokit", rev = "490206a" }
-ark-serialize = "0.3.0"
+hex-literal = "=0.3.4"
+tiny-keccak = { version = "=2.0.2", features = ["keccak"] }
+sled = "=0.34.7"
+ark-serialize = "=0.3.0"
 
 [dependencies]
-rayon = { version = "1.6.1", optional =  false }
+rayon = { version = "=1.7.0", optional =  false }
