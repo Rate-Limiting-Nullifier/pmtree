@@ -92,7 +92,7 @@ where
         // Load existing db instance
         let db = D::load(db_config)?;
 
-        // Load root 
+        // Load root
         let root = match db.get(Key(0, 0).into())? {
             Some(root) => H::deserialize(root),
             None => H::default_leaf(),
@@ -101,7 +101,7 @@ where
         // Load depth & next_index values from db
         let depth = match db.get(DEPTH_KEY)? {
             Some(depth) => usize::from_be_bytes(depth.try_into().unwrap()),
-            None => DEFAULT_TREE_DEPTH
+            None => DEFAULT_TREE_DEPTH,
         };
 
         let next_index = match db.get(NEXT_INDEX_KEY)? {
