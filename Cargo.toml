@@ -5,7 +5,7 @@ edition = "2021"
 description = "Generic for storage Merkle Tree (sparse & fixed-size) in Rust"
 repository = "https://github.com/Rate-Limiting-Nullifier/pmtree"
 license = "MIT OR Apache-2.0"
-license-file = "LICENSE_APACHE"
+license-file = "LICENSE-APACHE"
 
 [dev-dependencies]
 hex-literal = "0.3.4"
