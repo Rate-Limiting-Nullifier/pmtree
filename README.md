@@ -52,6 +52,10 @@ impl Database for MemoryDB {
 
         Ok(())
     }
+
+    fn close(&mut self) -> PmtreeResult<()> {
+        Ok(())
+    }
 }
 
 impl Hasher for MyKeccak {
@@ -90,5 +94,7 @@ fn main() {
         "c1ba1812ff680ce84c1d5b4f1087eeb08147a4d510f3496b2849df3a73f5af95"
     ))
     .unwrap();
+    // closes the connection to the database
+    mt.close().unwrap();
 }
 ```
