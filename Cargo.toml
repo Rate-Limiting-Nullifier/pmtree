@@ -2,8 +2,9 @@
 name = "pmtree"
 version = "1.0.0"
 edition = "2021"
+description = "Generic for storage Merkle Tree (sparse & fixed-size) in Rust"
+repository = "https://github.com/Rate-Limiting-Nullifier/pmtree"
 license = "MIT OR Apache-2.0"
-description = "Persistent Merkle Tree in Rust"
 
 [dev-dependencies]
 hex-literal = "=0.3.4"
