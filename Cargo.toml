@@ -1,6 +1,6 @@
 [package]
 name = "pmtree"
-version = "1.0.0"
+version = "2.0.0"
 edition = "2021"
 description = "Generic for storage Merkle Tree (sparse & fixed-size) in Rust"
 repository = "https://github.com/Rate-Limiting-Nullifier/pmtree"
