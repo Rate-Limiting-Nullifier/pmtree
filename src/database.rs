@@ -25,4 +25,7 @@ pub trait Database {
 
     /// Puts the leaves batch to the db
     fn put_batch(&mut self, subtree: HashMap<DBKey, Value>) -> PmtreeResult<()>;
+
+    /// Closes the db connection
+    fn close(&mut self) -> PmtreeResult<()>;
 }

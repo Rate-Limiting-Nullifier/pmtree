@@ -62,6 +62,12 @@ impl Database for MySled {
 
         Ok(())
     }
+
+    fn close(&mut self) -> PmtreeResult<()> {
+        self.0.flush().unwrap();
+
+        Ok(())
+    }
 }
 
 impl Hasher for MyKeccak {

@@ -10,6 +10,9 @@ const DEPTH_KEY: DBKey = (u64::MAX - 1).to_be_bytes();
 // db[NEXT_INDEX_KEY] = next_index;
 const NEXT_INDEX_KEY: DBKey = u64::MAX.to_be_bytes();
 
+// Default tree depth
+const DEFAULT_TREE_DEPTH: usize = 20;
+
 // Denotes keys (depth, index) in Merkle Tree. Can be converted to DBKey
 // TODO! Think about using hashing for that
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -27,7 +30,7 @@ where
     D: Database,
     H: Hasher,
 {
-    db: D,
+    pub db: D,
     depth: usize,
     next_index: usize,
     cache: Vec<H::Fr>,
@@ -90,14 +93,21 @@ where
         let db = D::load(db_config)?;
 
         // Load root
-        let root = H::deserialize(db.get(Key(0, 0).into())?.unwrap());
+        let root = match db.get(Key(0, 0).into())? {
+            Some(root) => H::deserialize(root),
+            None => H::default_leaf(),
+        };
 
         // Load depth & next_index values from db
-        let depth = db.get(DEPTH_KEY)?.unwrap().try_into().unwrap();
-        let depth = usize::from_be_bytes(depth);
+        let depth = match db.get(DEPTH_KEY)? {
+            Some(depth) => usize::from_be_bytes(depth.try_into().unwrap()),
+            None => DEFAULT_TREE_DEPTH,
+        };
 
-        let next_index = db.get(NEXT_INDEX_KEY)?.unwrap().try_into().unwrap();
-        let next_index = usize::from_be_bytes(next_index);
+        let next_index = match db.get(NEXT_INDEX_KEY)? {
+            Some(next_index) => usize::from_be_bytes(next_index.try_into().unwrap()),
+            None => 0,
+        };
 
         // Load cache vec
         let mut cache = vec![H::default_leaf(); depth + 1];
@@ -113,6 +123,11 @@ where
             cache,
             root,
         })
+    }
+
+    /// Closes the db connection
+    pub fn close(&mut self) -> PmtreeResult<()> {
+        self.db.close()
     }
 
     /// Sets a leaf at the specified tree index
